@@ -3,7 +3,9 @@
 Tuteur : Samuel GOUTIN
 
 Membres : Clara BEAUVAIS, Houda EDDARDOURI, Sarra CHAMSI, Raphaël CARRERE
+
 Créer votre propre application de sport
+
 # Présentation
 Strava est un réseau social utilisé pour enregistrer et partager ses activités sportives. Beaucoup de fonctionnalités sont payantes et d’autres pas au goût de chacun. Ce projet vise à créer une alternative à Strava, mais en mieux !
 
