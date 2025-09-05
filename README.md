@@ -1,6 +1,7 @@
 # Projet informatique - Groupe 15
 
 Tuteur : Samuel GOUTIN
+
 Membres : Clara BEAUVAIS, Houda EDDARDOURI, Sarra CHAMSI, Raphaël CARRERE
 Créer votre propre application de sport
 # Présentation
