@@ -1,12 +1,25 @@
 from business_object.user import User
 from dao.user_dao import UserDao
-from security import hash_password
+from utils.securite import hash_password
 
 
 class UserService():
     """Classe contenant les méthodes de service des users"""
 
     # créer user
+
+    def creer(self, prenom, nom, username, mot_de_passe) -> User:
+        """Création d'un joueur à partir de ses attributs"""
+
+        nouveau_user = User(
+            prenom=prenom,
+            nom=nom,
+            username=username,
+            mot_de_passe=hash_password(mot_de_passe),
+
+        )
+
+        return nouveau_user if UserDao().creer(nouveau_user) else None
 
     # lister tous les users
 
@@ -34,3 +47,9 @@ class UserService():
         # User = UserDao().lister_tous()
         # return pseudo in [j.pseudo for j in joueurs]
         pass 
+
+
+service = UserService()
+
+nouvel_user = service.creer("Alice", "Dupont", "alice123", "motdepassefort")
+print("Utilisateur créé :", nouvel_user)

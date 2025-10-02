@@ -2,7 +2,8 @@ from business_object.activite import Activite
 
 
 class User():
-    def __init__(self, id_user: int, nom: str, prenom: str, username: str, mot_de_passe: str):
+    def __init__(self, nom: str, prenom: str, username: str, mot_de_passe: str,
+                 id_user: int = None):
         self.id_user = id_user
         self.prenom = prenom
         self.nom = nom
