@@ -46,7 +46,7 @@ class UserService():
         Retourne True si le pseudo existe déjà en BDD"""
         # User = UserDao().lister_tous()
         # return pseudo in [j.pseudo for j in joueurs]
-        pass 
+        pass
 
 
 service = UserService()
