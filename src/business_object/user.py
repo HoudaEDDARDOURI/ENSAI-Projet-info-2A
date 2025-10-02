@@ -1,4 +1,7 @@
 from business_object.activite import Activite
+from business_object.like import Like
+from business_object.commentaire import Commentaire
+from business_object.parcours import Parcours
 
 
 class User():
@@ -10,7 +13,11 @@ class User():
         self.username = username
         self.mot_de_passe = mot_de_passe
         # self.photo = photo
-        self.activites: list[Activite] = []   # composition
-        # self.commentaires: List[Commentaire] = []
-        # self.likes: List[Like] = []
-        # self.parcours: List[Parcours] = []
+
+        self.following: set[User] = set()
+        self.followers: set[User] = set()
+
+        self.activites: list[Activite] = []  
+        self.commentaires: list[Commentaire] = []
+        self.likes: list[Like] = []
+        self.parcours: list[Parcours] = []

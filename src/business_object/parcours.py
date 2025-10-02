@@ -1,9 +1,5 @@
-class Parcours:
-    Voici le code Python pour la classe Parcours, basée sur le diagramme UML. Cette classe modélise un itinéraire enregistré, avec des points de départ et d'arrivée représentés par des tuples (paires de coordonnées).
-
-Python
-
 from typing import Optional, Tuple
+
 
 class Parcours:
     """
