@@ -1,4 +1,6 @@
-from typing import Optional, Tuple
+from typing import Tuple
+from business_object.user import User
+from business_object.activite import Activite
 
 
 class Parcours:
@@ -12,16 +14,11 @@ class Parcours:
     - idActivite: INTEGER - L'activité associée (peut être nulle)
     - idUser: INTEGER (int)
     """
-    def __init__(
-        self,
-        idParcours: int,
-        depart: Tuple[float, float], 
-        arrivee: Tuple[float, float], 
-        idActivite: int,
-        idUser: int
-    ):
+    def __init__(self, depart: Tuple[float, float], arrivee: Tuple[float, float],
+                 activites: list[Activite], user: User, idParcours: int = None
+                 ):
         self.idParcours = idParcours
         self.depart = depart
         self.arrivee = arrivee
-        self.idActivite = idActivite
-        self.idUser = idUser
+        self.activites = activites
+        self.user = user

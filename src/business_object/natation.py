@@ -1,4 +1,6 @@
 from datetime import date, timedelta
+from business_object.activite import Activite
+
 
 class Natation(Activite):
     def __init__(self, id_activite: int, id_user: int, date: date, type_sport: str,
@@ -9,6 +11,7 @@ class Natation(Activite):
                          trace, id_parcours, titre, description)
         self.id_natation = id_natation
         self.vitesse_min100m = vitesse_min100m
+
     def afficher_details(self):
         print(f"Natation: {self.titre}, Distance: {self.distance} m, "
               f"Vitesse: {self.vitesse_min100m:.2f} min/100m")

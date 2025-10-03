@@ -17,7 +17,7 @@ class User():
         self.following: set[User] = set()
         self.followers: set[User] = set()
 
-        self.activites: list[Activite] = []  
+        self.activites: list[Activite] = []
         self.commentaires: list[Commentaire] = []
         self.likes: list[Like] = []
         self.parcours: list[Parcours] = []

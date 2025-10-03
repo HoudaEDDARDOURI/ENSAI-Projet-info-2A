@@ -1,6 +1,5 @@
 import logging
 from dao.db_connection import DBConnection
-from business_object.user import User
 from utils.singleton import Singleton
 
 
