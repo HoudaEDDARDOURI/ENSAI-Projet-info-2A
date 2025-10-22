@@ -49,7 +49,7 @@ class ActiviteDao(metaclass=Singleton):
 
         return created
 
-    def trouver_par_id(self, id_activite: int) -> Activite | None:
+    def lire(self, id_activite: int) -> Activite | None:
         """Récupère une activité par son identifiant."""
         try:
             with DBConnection().connection as connection:
@@ -110,7 +110,7 @@ class ActiviteDao(metaclass=Singleton):
                             "description": activite.description,
                         },
                     )
-                    return cursor.rowcount > 0  
+                    return cursor.rowcount > 0
         except psycopg2.Error as e:
             logging.error(f"Erreur SQL : {e.pgerror}")
         except Exception as e:
