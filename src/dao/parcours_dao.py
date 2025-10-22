@@ -39,7 +39,7 @@ class ParcoursDao(metaclass=Singleton):
 
         return created
  
-    def read(self, id_parcours: int) -> Parcours | None:
+    def lire(self, id_parcours: int) -> Parcours | None:
         """Récupère un parcours à partir de son ID"""
         res = None
         try:
@@ -64,7 +64,7 @@ class ParcoursDao(metaclass=Singleton):
             )
         return parcours
 
-    def update(self, parcours: Parcours) -> bool:
+    def modifier(self, parcours: Parcours) -> bool:
         """Mise à jour d'un parcours """
         res = None
         try:
@@ -97,7 +97,7 @@ class ParcoursDao(metaclass=Singleton):
             updated = True
         return updated
 
-    def delete(self, id_parcours: int) -> bool:
+    def supprimer(self, id_parcours: int) -> bool:
         """Supprime un parcours par son ID"""
         res = None
         try:

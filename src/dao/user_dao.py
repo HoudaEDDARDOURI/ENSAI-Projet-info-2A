@@ -47,7 +47,7 @@ class UserDao(metaclass=Singleton):
 
         return created
 
-    def update(self, user) -> bool:
+    def modifier(self, user) -> bool:
         """Mise à jour d'un utilisateur"""
         res = None
         try:
@@ -80,7 +80,7 @@ class UserDao(metaclass=Singleton):
             updated = True
         return updated
 
-    def delete(self, id_user: int) -> bool:
+    def supprimer(self, id_user: int) -> bool:
         """Supprime un utilisateur par son ID"""
         res = None
         try:
@@ -99,7 +99,7 @@ class UserDao(metaclass=Singleton):
             deleted = True
         return deleted
 
-    def read(self, id_user: int) -> User | None:
+    def lire(self, id_user: int) -> User | None:
          """Récupère toutes les informations d'un utilisateur à partir de son ID"""
          res = None
 
