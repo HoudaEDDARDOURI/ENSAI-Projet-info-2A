@@ -38,8 +38,7 @@ class UserDao(metaclass=Singleton):
                     )
                     res = cursor.fetchone()
         except Exception as e:
-            logging.info(e)
-
+            logging.error(f"Erreur lors de la création d'un utilisateur : {e}")
         created = False
         if res:
             user.id_user = res["id_user"]
@@ -73,8 +72,7 @@ class UserDao(metaclass=Singleton):
                     )
                     res = cursor.fetchone()
         except Exception as e:
-            logging.info(e)
-
+            logging.error(f"Erreur lors de la modification de l'utilisateur : {e}")
         updated = False
         if res:
             updated = True
@@ -92,7 +90,7 @@ class UserDao(metaclass=Singleton):
                     )
                     res = cursor.fetchone()
         except Exception as e:
-            logging.info(e)
+            logging.error(f"Erreur lors de la suppression d'un utilisateur : {e}")
 
         deleted = False
         if res:
@@ -112,7 +110,7 @@ class UserDao(metaclass=Singleton):
                 )
                 res = cursor.fetchone()
         except Exception as e:
-        logging.info(e)
+            logging.error(f"Erreur lors de la lecture d'un utilisateur : {e}")
 
         user = None
         if res:
