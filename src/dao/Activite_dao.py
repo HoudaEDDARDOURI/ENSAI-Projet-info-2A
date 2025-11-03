@@ -3,6 +3,7 @@ from dao.db_connection import DBConnection
 from business_object.activite import Activite
 from utils.singleton import Singleton
 
+
 class ActiviteDao(metaclass=Singleton):
     """Classe contenant les méthodes pour accéder aux activités de la base de données"""
 
@@ -16,7 +17,8 @@ class ActiviteDao(metaclass=Singleton):
                     cursor.execute(
                         """
                         INSERT INTO app.activite(
-                            id_user, type_sport, distance, duree, trace, id_parcours, titre, description
+                            id_user, type_sport, distance, duree, trace, id_parcours, titre,
+                            description
                         ) VALUES (
                             %(id_user)s, %(type_sport)s, %(distance)s, %(duree)s, %(trace)s,
                             %(id_parcours)s, %(titre)s, %(description)s
