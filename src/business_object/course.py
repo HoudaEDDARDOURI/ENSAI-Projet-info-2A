@@ -19,6 +19,6 @@ class Course(Activite):
         self.denivele = denivele
         self.vitesse_minkm = None
 
-        def afficher_details(self):
-            print(f"Course: {self.titre}, Distance: {self.distance} km, "
-                  f"Dénivelé: {self.denivele} m, Vitesse: {self.vitesse_minkm:.2f} min/km")
+    def afficher_details(self):
+        print(f"Course: {self.titre}, Distance: {self.distance} km, "
+                f"Dénivelé: {self.denivele} m, Vitesse: {self.vitesse_minkm:.2f} min/km")

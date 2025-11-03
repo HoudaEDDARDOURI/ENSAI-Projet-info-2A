@@ -21,15 +21,16 @@ class ActiviteDao(metaclass=Singleton):
                     cursor.execute(
                         """
                         INSERT INTO app.activite(
-                            id_user, type_sport, distance, duree, trace, id_parcours, titre, description
+                            id_user, date_activite, type_sport, distance, duree, trace, id_parcours, titre, description
                         ) VALUES (
-                            %(id_user)s, %(type_sport)s, %(distance)s, %(duree)s, %(trace)s,
+                            %(id_user)s, %(date_activite)s, %(type_sport)s, %(distance)s, %(duree)s, %(trace)s,
                             %(id_parcours)s, %(titre)s, %(description)s
                         )
                         RETURNING id_activite;
                         """,
                         {
                             "id_user": activite.id_user,
+                            "date_activite": activite.date,
                             "type_sport": activite.type_sport,
                             "distance": activite.distance,
                             "duree": activite.duree,

@@ -1,20 +1,18 @@
-from business_object.activite import Activite
-from business_object.like import Like
-from business_object.commentaire import Commentaire
-from business_object.parcours import Parcours
-from datetime import date
+from __future__ import annotations
+from datetime import datetime
 
 
 class User():
+
     def __init__(self, nom: str, prenom: str, username: str, mot_de_passe: str,
-                 email: str, date_creation: date, id_user: int = None):
+                 id_user: int = None, created_at: datetime = None):
         self.id_user = id_user
         self.prenom = prenom
         self.nom = nom
         self.username = username
-        self.email = email
         self.mot_de_passe = mot_de_passe
-        self.date_creation = date_creation
+        self.created_at = created_at
+
 
         # self.photo = photo
 
@@ -23,3 +21,17 @@ class User():
 
         self.activites: list[Activite] = []
         self.parcours: list[Parcours] = []
+
+    def suivre(self, autre_user: "User"):
+        """Ajoute un utilisateur à la liste des suivis"""
+        if autre_user.id_user == self.id_user:
+            raise ValueError("Un utilisateur ne peut pas se suivre lui-même.")
+        self.following.add(autre_user.id_user)
+
+    def ajouter_activite(self, activite):
+        """Ajoute une activité à la liste locale"""
+        self.activites.append(activite)
+
+    def ajouter_parcours(self, parcours):
+        """Ajoute un parcours à la liste locale"""
+        self.parcours.append(parcours)

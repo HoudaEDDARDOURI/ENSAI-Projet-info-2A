@@ -1,55 +1,46 @@
 from business_object.user import User
 from dao.user_dao import UserDao
 from utils.securite import hash_password
+from datetime import datetime
 
 
-class UserService():
-    """Classe contenant les méthodes de service des users"""
+class UserService:
 
-    # créer user
+    def __init__(self):
+        self.dao = UserDao()
 
     def creer(self, prenom, nom, username, mot_de_passe) -> User:
-        """Création d'un joueur à partir de ses attributs"""
+        """Création d'un utilisateur à partir de ses attributs"""
 
         nouveau_user = User(
             prenom=prenom,
             nom=nom,
             username=username,
-            mot_de_passe=hash_password(mot_de_passe),
-
+            mot_de_passe=hash_password(mot_de_passe)
         )
 
-        return nouveau_user if UserDao().creer(nouveau_user) else None
+        return nouveau_user if self.dao.creer(nouveau_user) else None
 
-    # lister tous les users
+    def supprimer(self, id_user: int) -> bool:
+        return self.dao.supprimer(id_user)
 
-    # modifier users
+    def se_connecter(self, pseudo, mdp) -> User:
+        return self.dao.se_connecter(pseudo, hash_password(mdp, pseudo))
 
-    # lister les followers
+    def pseudo_deja_utilise(self, username) -> bool:
+        user = self.dao.trouver_par_username(username)
+        return user is not None
 
-    # trouver par id
+    def suivre(self, user: User, autre_user: User) -> bool:
+        if user.id_user == autre_user.id_user:
+            raise ValueError("Un utilisateur ne peut pas se suivre lui-même.")
+        user.suivre(autre_user)
+        return self.dao.ajouter_suivi(user.id_user, autre_user.id_user)
+
+    # lister ses followers
+
+    # trouver par id (pertinent de l'ajouter ?)
 
     # modifier
 
-    # supprimer
-
-    # se connecter
-
-    # @log
-    def se_connecter(self, pseudo, mdp) -> User:
-        """Se connecter à partir de pseudo et mdp"""
-        return UserDao().se_connecter(pseudo, hash_password(mdp, pseudo))
-
-    # @log
-    def pseudo_deja_utilise(self, pseudo) -> bool:
-        """Vérifie si le pseudo est déjà utilisé
-        Retourne True si le pseudo existe déjà en BDD"""
-        # User = UserDao().lister_tous()
-        # return pseudo in [j.pseudo for j in joueurs]
-        pass
-
-
-service = UserService()
-
-nouvel_user = service.creer("Alice", "Dupont", "alice123", "motdepassefort")
-print("Utilisateur créé :", nouvel_user)
+    # ajouter parcours
