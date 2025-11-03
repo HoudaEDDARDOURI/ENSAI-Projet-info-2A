@@ -1,6 +1,10 @@
 import logging
+import psycopg2
 from dao.db_connection import DBConnection
 from business_object.activite import Activite
+from business_object.course import Course
+from business_object.natation import Natation
+from business_object.cyclisme import Cyclisme
 from utils.singleton import Singleton
 
 
@@ -17,8 +21,7 @@ class ActiviteDao(metaclass=Singleton):
                     cursor.execute(
                         """
                         INSERT INTO app.activite(
-                            id_user, type_sport, distance, duree, trace, id_parcours, titre,
-                            description
+                            id_user, type_sport, distance, duree, trace, id_parcours, titre, description
                         ) VALUES (
                             %(id_user)s, %(type_sport)s, %(distance)s, %(duree)s, %(trace)s,
                             %(id_parcours)s, %(titre)s, %(description)s
@@ -37,8 +40,10 @@ class ActiviteDao(metaclass=Singleton):
                         },
                     )
                     res = cursor.fetchone()
+        except psycopg2.Error as e:
+            logging.error(f"Erreur SQL : {e.pgerror}")
         except Exception as e:
-            logging.error(f"Erreur lors de la création de l'activité : {e}")
+            logging.exception("Erreur inattendue lors de la création de l'activité")
 
         created = False
         if res:
@@ -46,3 +51,133 @@ class ActiviteDao(metaclass=Singleton):
             created = True
 
         return created
+
+    def lire(self, id_activite: int) -> Activite | None:
+        """Récupère une activité par son identifiant."""
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        SELECT *
+                        FROM activite
+                        WHERE id_activite = %(id)s;
+                        """,
+                        {"id": id_activite},
+                    )
+                    res = cursor.fetchone()
+                    if res:
+                        type_sport = res["type_sport"].lower()
+                    
+                        if type_sport == "course":
+                            return Course(
+                                id_activite=res["id_activite"],
+                                id_user=res["id_user"],
+                                date=res["date"],
+                                distance=res["distance"],
+                                duree=res["duree"],
+                                trace=res["trace"],
+                                id_parcours=res["id_parcours"],
+                                titre=res["titre"],
+                                description=res["description"],
+                                denivele=res.get("denivele", 0.0)
+                            )
+                        elif type_sport == "natation":
+                            return Natation(
+                                id_activite=res["id_activite"],
+                                id_user=res["id_user"],
+                                date=res["date"],
+                                distance=res["distance"],
+                                duree=res["duree"],
+                                trace=res["trace"],
+                                id_parcours=res["id_parcours"],
+                                titre=res["titre"],
+                                description=res["description"],
+                            )
+                        elif type_sport == "cyclisme":
+                            return Cyclisme(
+                                id_activite=res["id_activite"],
+                                id_user=res["id_user"],
+                                date=res["date"],
+                                distance=res["distance"],
+                                duree=res["duree"],
+                                trace=res["trace"],
+                                id_parcours=res["id_parcours"],
+                                titre=res["titre"],
+                                description=res["description"],
+                                denivele=res.get("denivele", 0.0)
+                            )
+                        else:
+                        
+                            return Activite(
+                                id_activite=res["id_activite"],
+                                id_user=res["id_user"],
+                                type_sport=res["type_sport"],
+                                distance=res["distance"],
+                                duree=res["duree"],
+                                trace=res["trace"],
+                                id_parcours=res["id_parcours"],
+                                titre=res["titre"],
+                                description=res["description"],
+                            )
+        except psycopg2.Error as e:
+            logging.error(f"Erreur SQL : {e.pgerror}")
+        except Exception as e:
+            logging.exception("Erreur inattendue lors de la lecture de l'activité")
+        return None
+
+    def modifier(self, activite: Activite) -> bool:
+        """Met à jour les informations d’une activité existante."""
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    sql = """
+                        UPDATE activite
+                        SET type_sport = %(type_sport)s,
+                            distance = %(distance)s,
+                            duree = %(duree)s,
+                            trace = %(trace)s,
+                            id_parcours = %(id_parcours)s,
+                            titre = %(titre)s,
+                            description = %(description)s
+                    """
+                    params = {
+                        "id_activite": activite.id_activite,
+                        "type_sport": activite.type_sport,
+                        "distance": activite.distance,
+                        "duree": activite.duree,
+                        "trace": activite.trace,
+                        "id_parcours": activite.id_parcours,
+                        "titre": activite.titre,
+                        "description": activite.description,
+                    }
+
+                    if hasattr(activite, "denivele"):
+                        sql += ", denivele = %(denivele)s"
+                        params["denivele"] = activite.denivele
+
+                    sql += " WHERE id_activite = %(id_activite)s;"
+
+                    cursor.execute(sql, params)
+                    return cursor.rowcount > 0
+        except psycopg2.Error as e:
+            logging.error(f"Erreur SQL : {e.pgerror}")
+        except Exception as e:
+            logging.exception("Erreur inattendue lors de la modification de l'activité")
+        return False
+
+    def supprimer(self, id_activite: int) -> bool:
+        """Supprime une activité."""
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "DELETE FROM activite WHERE id_activite = %(id)s;",
+                        {"id": id_activite},
+                    )
+                    return cursor.rowcount > 0
+        except psycopg2.Error as e:
+            logging.error(f"Erreur SQL : {e.pgerror}")
+        except Exception as e:
+            logging.exception("Erreur inattendue lors de la suppression de l'activité")
+        return False
