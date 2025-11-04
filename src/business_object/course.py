@@ -22,3 +22,12 @@ class Course(Activite):
     def afficher_details(self):
         print(f"Course: {self.titre}, Distance: {self.distance} km, "
                 f"Dénivelé: {self.denivele} m, Vitesse: {self.vitesse_minkm:.2f} min/km")
+
+        def calculer_vitesse_course(self) -> float:
+        """Calcule la vitesse moyenne du cycliste en km/h."""
+        duree_heures = self.duree.total_seconds() / 3600  # convertir la durée en heures
+        if duree_heures > 0:
+            vitesse = self.distance / duree_heures
+            return round(vitesse, 2)
+        else:
+            return 0.0            
