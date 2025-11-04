@@ -21,10 +21,11 @@ class ActiviteDao(metaclass=Singleton):
                     cursor.execute(
                         """
                         INSERT INTO app.activite(
-                            id_user, date_activite, type_sport, distance, duree, trace, id_parcours, titre, description
+                            id_user, date_activite, type_sport, distance, duree, trace, id_parcours,
+                            titre, description
                         ) VALUES (
-                            %(id_user)s, %(date_activite)s, %(type_sport)s, %(distance)s, %(duree)s, %(trace)s,
-                            %(id_parcours)s, %(titre)s, %(description)s
+                            %(id_user)s, %(date_activite)s, %(type_sport)s, %(distance)s, %(duree)s,
+                            %(trace)s, %(id_parcours)s, %(titre)s, %(description)s
                         )
                         RETURNING id_activite;
                         """,
@@ -43,7 +44,7 @@ class ActiviteDao(metaclass=Singleton):
                     res = cursor.fetchone()
         except psycopg2.Error as e:
             logging.error(f"Erreur SQL : {e.pgerror}")
-        except Exception as e:
+        except Exception:
             logging.exception("Erreur inattendue lors de la création de l'activité")
 
         created = False
@@ -69,7 +70,7 @@ class ActiviteDao(metaclass=Singleton):
                     res = cursor.fetchone()
                     if res:
                         type_sport = res["type_sport"].lower()
-                    
+
                         if type_sport == "course":
                             return Course(
                                 id_activite=res["id_activite"],
@@ -109,7 +110,7 @@ class ActiviteDao(metaclass=Singleton):
                                 denivele=res.get("denivele", 0.0)
                             )
                         else:
-                        
+
                             return Activite(
                                 id_activite=res["id_activite"],
                                 id_user=res["id_user"],
@@ -123,7 +124,7 @@ class ActiviteDao(metaclass=Singleton):
                             )
         except psycopg2.Error as e:
             logging.error(f"Erreur SQL : {e.pgerror}")
-        except Exception as e:
+        except Exception:
             logging.exception("Erreur inattendue lors de la lecture de l'activité")
         return None
 
@@ -163,7 +164,7 @@ class ActiviteDao(metaclass=Singleton):
                     return cursor.rowcount > 0
         except psycopg2.Error as e:
             logging.error(f"Erreur SQL : {e.pgerror}")
-        except Exception as e:
+        except Exception:
             logging.exception("Erreur inattendue lors de la modification de l'activité")
         return False
 
@@ -179,6 +180,6 @@ class ActiviteDao(metaclass=Singleton):
                     return cursor.rowcount > 0
         except psycopg2.Error as e:
             logging.error(f"Erreur SQL : {e.pgerror}")
-        except Exception as e:
+        except Exception:
             logging.exception("Erreur inattendue lors de la suppression de l'activité")
         return False
