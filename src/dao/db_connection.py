@@ -35,4 +35,3 @@ class DBConnection(metaclass=Singleton):
         if self.__connection and not self.__connection.closed:
             self.__connection.close()
             print("🔒 Connexion à la base fermée.")
-
