@@ -20,7 +20,7 @@ class ActiviteDao(metaclass=Singleton):
                 with connection.cursor() as cursor:
                     cursor.execute(
                         """
-                        INSERT INTO app.activite(
+                        INSERT INTO activite(
                             id_user, date_activite, type_sport, distance, duree, trace, id_parcours,
                             titre, description
                         ) VALUES (
