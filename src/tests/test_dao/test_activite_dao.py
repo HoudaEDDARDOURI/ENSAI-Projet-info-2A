@@ -83,10 +83,10 @@ def test_lire_activite_non_existante():
     assert activite is None
 
 
-def test_lire_activite_type_course(activite_course_creee):
+def test_lire_activite_type_course(activite_course_exemple):
     """Vérifie que la lecture d'une Course retourne bien un objet Course"""
     # GIVEN
-    id_course = activite_course_creee
+    id_course = activite_course_exemple
 
     # WHEN
     activite_lue = ActiviteDao().lire(id_course)
@@ -98,10 +98,10 @@ def test_lire_activite_type_course(activite_course_creee):
     assert activite_lue.denivele == 150.0
 
 
-def test_lire_activite_type_natation(activite_natation_creee):
+def test_lire_activite_type_natation(activite_natation_exemple):
     """Vérifie que la lecture d'une Natation retourne bien un objet Natation"""
     # GIVEN
-    id_natation = activite_natation_creee
+    id_natation = activite_natation_exemple
 
     # WHEN
     activite_lue = ActiviteDao().lire(id_natation)
@@ -112,10 +112,10 @@ def test_lire_activite_type_natation(activite_natation_creee):
     assert activite_lue.distance == 1.5
 
 
-def test_lire_activite_type_cyclisme(activite_cyclisme_creee):
+def test_lire_activite_type_cyclisme(activite_cyclisme_exemple):
     """Vérifie que la lecture d'un Cyclisme retourne bien un objet Cyclisme"""
     # GIVEN
-    id_cyclisme = activite_cyclisme_creee
+    id_cyclisme = activite_cyclisme_exemple
 
     # WHEN
     activite_lue = ActiviteDao().lire(id_cyclisme)
@@ -204,10 +204,10 @@ def test_modifier_activite_ok():
     assert activite_modifiee.distance == 12.5
 
 
-def test_modifier_activite_avec_denivele_ok(activite_course_creee):
+def test_modifier_activite_avec_denivele_ok(activite_course_exemple):
     """Modification d'une activité avec dénivelé réussie"""
     # GIVEN
-    course = ActiviteDao().lire(activite_course_creee)
+    course = ActiviteDao().lire(activite_course_exemple)
     course.titre = "Course modifiée"
     course.denivele = 200.0
     course.distance = 15.0
