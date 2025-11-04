@@ -36,7 +36,7 @@ class CommentaireDao(metaclass=Singleton):
                         return True
         except psycopg2.Error as e:
             logging.error(f"Erreur SQL (CREATE commentaire) : {e.pgerror or e}")
-        except Exception as e:
+        except Exception:
             logging.exception("Erreur inattendue (CREATE commentaire)")
         return False
 
@@ -95,7 +95,7 @@ class CommentaireDao(metaclass=Singleton):
                     return cursor.rowcount > 0
         except psycopg2.Error as e:
             logging.error(f"Erreur SQL (UPDATE commentaire) : {e.pgerror or e}")
-        except Exception as e:
+        except Exception:
             logging.exception("Erreur inattendue (UPDATE commentaire)")
         return False
 
@@ -111,6 +111,6 @@ class CommentaireDao(metaclass=Singleton):
                     return cursor.rowcount > 0
         except psycopg2.Error as e:
             logging.error(f"Erreur SQL (DELETE commentaire) : {e.pgerror or e}")
-        except Exception as e:
+        except Exception:
             logging.exception("Erreur inattendue (DELETE commentaire)")
         return False

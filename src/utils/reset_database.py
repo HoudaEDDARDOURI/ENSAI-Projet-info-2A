@@ -2,58 +2,43 @@ import os
 import logging
 import dotenv
 
-from unittest import mock
-
 from utils.log_decorator import log
 from utils.singleton import Singleton
 from dao.db_connection import DBConnection
 
-from service.joueur_service import JoueurService
+from service.user_service import UserService
 
 
 class ResetDatabase(metaclass=Singleton):
-    """
-    Reinitialisation de la base de données
-    """
+    """Réinitialisation de la base de données à partir de init_db.sql"""
 
     @log
     def lancer(self, test_dao=False):
-        """Lancement de la réinitialisation des données
-        Si test_dao = True : réinitialisation des données de test"""
-        if test_dao:
-            mock.patch.dict(os.environ, {"POSTGRES_SCHEMA": "projet_test_dao"}).start()
-            pop_data_path = "data/pop_db_test.sql"
-        else:
-            pop_data_path = "data/pop_db.sql"
-
+        """Réinitialise la base de données. Si test_dao=True, utilise le schéma de test."""
         dotenv.load_dotenv()
 
-        schema = os.environ["POSTGRES_SCHEMA"]
+        schema_name = "projet_test_dao" if test_dao else os.environ.get("POSTGRES_SCHEMA", "public")
+        create_schema = f"DROP SCHEMA IF EXISTS {schema_name} CASCADE; CREATE SCHEMA {schema_name};"
 
-        create_schema = f"DROP SCHEMA IF EXISTS {schema} CASCADE; CREATE SCHEMA {schema};"
+        current_dir = os.path.dirname(os.path.abspath(__file__))  # utils/
+        project_root = os.path.abspath(os.path.join(current_dir, "..", ".."))  # racine du projet
+        init_db_path = os.path.join(project_root, "data", "init_db.sql")
 
-        init_db = open("data/init_db.sql", encoding="utf-8")
-        init_db_as_string = init_db.read()
-        init_db.close()
-
-        pop_db = open(pop_data_path, encoding="utf-8")
-        pop_db_as_string = pop_db.read()
-        pop_db.close()
+        with open(init_db_path, encoding="utf-8") as f:
+            init_db_as_string = f.read()
 
         try:
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(create_schema)
                     cursor.execute(init_db_as_string)
-                    cursor.execute(pop_db_as_string)
         except Exception as e:
-            logging.info(e)
+            logging.error(e)
             raise
 
-        # Appliquer le hashage des mots de passe à chaque joueur
-        joueur_service = JoueurService()
-        for j in joueur_service.lister_tous(inclure_mdp=True):
-            joueur_service.modifier(j)
+        user_service = UserService()
+        for u in user_service.lister_tous(inclure_mdp=True):
+            user_service.modifier(u)
 
         return True
 
