@@ -19,8 +19,6 @@ class User():
         self.following: set[int] = set()
         self.followers: set[int] = set()
 
-        self.activites: list[Activite] = []
-        self.parcours: list[Parcours] = []
 
     def suivre(self, autre_user: "User"):
         """Ajoute un utilisateur à la liste des suivis"""

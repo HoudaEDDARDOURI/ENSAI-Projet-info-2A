@@ -75,7 +75,7 @@ class ActiviteDao(metaclass=Singleton):
                             return Course(
                                 id_activite=res["id_activite"],
                                 id_user=res["id_user"],
-                                date=res["date"],
+                                date=res["date_activite"],
                                 distance=res["distance"],
                                 duree=res["duree"],
                                 trace=res["trace"],

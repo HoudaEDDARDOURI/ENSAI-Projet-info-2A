@@ -82,3 +82,5 @@ class LikeDao(metaclass=Singleton):
         return deleted
 
     
+    # get all likes par user et par activite 
+    # get all comments par user et par activite 
