@@ -41,6 +41,29 @@ class UserService:
 
     # trouver par id (pertinent de l'ajouter ?)
 
-    # modifier
+    # modifier user 
 
-    # ajouter parcours
+
+    # ---------------- activité 
+
+    # creer activite 
+
+
+    # afficher all activities 
+
+    # modifier activite 
+
+    # supprimer activite 
+
+    # consulter une activite 
+
+        
+                    # get all likes d'une activite 
+
+                    # get all comments 
+
+    # ------------------------- parcours 
+
+    # CRUD parcours 
+
+    

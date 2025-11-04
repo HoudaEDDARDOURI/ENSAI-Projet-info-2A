@@ -6,6 +6,11 @@ from service.user_service import UserService
 from dao.Activite_dao import ActiviteDao
 from datetime import date
 
+from dao.db_connection import DBConnection
+
+
+
+
 
 def importer_activite_gpx(chemin_fichier: str, id_user: int):
     """Lit un fichier GPX et crée une activité associée à l'utilisateur."""
@@ -47,32 +52,37 @@ def importer_activite_gpx(chemin_fichier: str, id_user: int):
 if __name__ == "__main__":
     print("=== Test de création d’un utilisateur et d’une activité ===")
 
-    # 1️⃣ Créer un utilisateur
+    # 1Créer un utilisateur
     user_service = UserService()
     date_inscription = date(2025, 10, 26)
-    user = user_service.creer("Houda", "Edd", "harrypotte", "motdepassefort")
+    user = user_service.creer("Houda", "Edd", "user14", "motdepassefort")
 
     if user:
-        print(f"✅ Utilisateur créé : {user.username} (id={user.id_user})")
+        print(f"Utilisateur créé : {user.username} (id={user.id_user})")
     else:
         print("⚠️ Erreur lors de la création de l'utilisateur.")
         exit()
 
-    # 2️⃣ Importer une activité depuis un fichier GPX
+    # 2Importer une activité depuis un fichier GPX
     chemin_gpx = "/home/onyxia/work/ENSAI-Projet-info-2A/data/strava_activities.gpx"  # adapte le chemin
     activite = importer_activite_gpx(chemin_gpx, user.id_user)
 
-    # 3️⃣ Enregistrer l’activité dans la base via le DAO
+    # Enregistrer l’activité dans la base via le DAO
     dao = ActiviteDao()
     succes = dao.creer(activite)
 
     if succes:
-        print(f"\n✅ Activité enregistrée en base avec id={activite.id_activite}")
+        print(f"\nActivité enregistrée en base avec id={activite.id_activite}")
     else:
-        print("\n❌ Erreur lors de la sauvegarde de l’activité.")
+        print("\nErreur lors de la sauvegarde de l’activité.")
 
-    # 4️⃣ Vérification : lecture depuis la base
+    # 4Vérification : lecture depuis la base
     if succes:
         activite_lue = dao.lire(activite.id_activite)
-        print("\n📄 Activité relue depuis la base :")
-        print(vars(activite_lue))
+        print("\nActivité relue depuis la base :")
+        print(activite_lue)
+
+
+    # Fermer la connexion avant de modifier la BD
+db = DBConnection()
+db.close()

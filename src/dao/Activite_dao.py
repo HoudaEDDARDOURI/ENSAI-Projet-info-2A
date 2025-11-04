@@ -69,12 +69,12 @@ class ActiviteDao(metaclass=Singleton):
                     res = cursor.fetchone()
                     if res:
                         type_sport = res["type_sport"].lower()
-                    
+                        print(res)
                         if type_sport == "course":
                             return Course(
                                 id_activite=res["id_activite"],
                                 id_user=res["id_user"],
-                                date=res["date"],
+                                date=res["date_activite"],
                                 distance=res["distance"],
                                 duree=res["duree"],
                                 trace=res["trace"],
