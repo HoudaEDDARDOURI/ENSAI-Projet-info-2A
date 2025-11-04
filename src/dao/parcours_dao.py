@@ -3,23 +3,20 @@ from dao.db_connection import DBConnection
 from utils.singleton import Singleton
 from business_object.parcours import Parcours
 
+
 class ParcoursDao(metaclass=Singleton):
     """Classe contenant les méthodes pour accéder aux parcours de la base de données"""
 
     def creer(self, parcours: Parcours) -> bool:
         """Création d'un parcours dans la base de données"""
         res = None
-    try:
+        try:
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
                         """
-                        INSERT INTO app.parcours(
-                             depart, arrivee, id_activite, id_user
-                        ) VALUES (
-                             %(depart)s, %(arrivee)s,%(id_activite)s,%(id_user)s
-                        )
-                        RETURNING id_parcours;
+                        INSERT INTO parcours(depart, arrivee, id_activite, id_user) VALUES 
+                        (%(depart)s, %(arrivee)s,%(id_activite)s,%(id_user)s) RETURNING id_parcours;
                         """,
                         {
                             "depart": parcours.depart,
@@ -32,13 +29,12 @@ class ParcoursDao(metaclass=Singleton):
         except Exception as e:
             logging.error(f"Erreur lors de la création du parcours : {e}")
 
-        created = False
-        if res:
-            parcours.id_parcours = res["id_parcours"]
-            created = True
-
+            created = False
+            if res:
+                parcours.id_parcours = res["id_parcours"]
+                created = True
         return created
- 
+
     def lire(self, id_parcours: int) -> Parcours | None:
         """Récupère un parcours à partir de son ID"""
         res = None
@@ -104,7 +100,8 @@ class ParcoursDao(metaclass=Singleton):
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "DELETE FROM app.parcours WHERE id_parcours = %(id_parcours)s RETURNING id_parcours;",
+                        """DELETE FROM app.parcours WHERE id_parcours = %(id_parcours)s
+                        RETURNING id_parcours;""",
                         {"id_parcours": id_parcours},
                     )
                     res = cursor.fetchone()

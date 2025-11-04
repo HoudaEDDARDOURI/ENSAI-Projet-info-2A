@@ -3,6 +3,7 @@ from utils.singleton import Singleton
 from dao.db_connection import DBConnection
 from business_object.follows import Follow
 
+
 class FollowDao(metaclass=Singleton):
     """Classe contenant les méthodes pour accéder aux relations de suivi (follow)"""
 
@@ -14,7 +15,7 @@ class FollowDao(metaclass=Singleton):
                 with connection.cursor() as cursor:
                     cursor.execute(
                         """
-                        INSERT INTO app.follow (id_followed, id_follower)
+                        INSERT INTO follow (id_followed, id_follower)
                         VALUES (%(id_followed)s, %(id_follower)s)
                         RETURNING id_follow;
                         """,
@@ -39,7 +40,7 @@ class FollowDao(metaclass=Singleton):
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT * FROM app.follow WHERE id_follow = %(id_follow)s;",
+                        "SELECT * FROM follow WHERE id_follow = %(id_follow)s;",
                         {"id_follow": id_follow},
                     )
                     res = cursor.fetchone()
@@ -62,7 +63,7 @@ class FollowDao(metaclass=Singleton):
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "DELETE FROM app.follow WHERE id_follow = %(id_follow)s RETURNING id_follow;",
+                        "DELETE FROM follow WHERE id_follow = %(id_follow)s RETURNING id_follow;",
                         {"id_follow": id_follow},
                     )
                     res = cursor.fetchone()
