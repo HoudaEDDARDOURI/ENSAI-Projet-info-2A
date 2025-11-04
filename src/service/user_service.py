@@ -1,7 +1,9 @@
 from business_object.user import User
 from business_object.activite import Activite
 from dao.user_dao import UserDao
-from dao.activite_dao import ActiviteDao
+from src.dao.activite_dao import ActiviteDao
+from dao.like_dao import LikeDao
+from dao.commentaire_dao import CommentaireDao
 from utils.securite import hash_password
 from datetime import datetime
 
@@ -11,6 +13,9 @@ class UserService:
     def __init__(self):
         self.userdao = UserDao()
         self.activiteDao = ActiviteDao()
+        self.commentaireDao = CommentaireDao()
+        self.likeDao=LikeDao()
+
 
     def creer(self, prenom, nom, username, mot_de_passe) -> User:
         """Création d'un utilisateur à partir de ses attributs"""
@@ -69,20 +74,60 @@ class UserService:
 
 
     # afficher all activities 
+    def afficher_toutes(self):
+        """
+        Affiche toutes les activités en utilisant la méthode 'lire' du DAO.
+        """
+        try:
+            # Étape 1 : récupérer tous les IDs
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT id_activite FROM activite;")
+                    ids = [row["id_activite"] for row in cursor.fetchall()]
+
+            if not ids:
+                print("Aucune activité trouvée.")
+                return
+
+            # Étape 2 et 3 : récupérer chaque activité et l'afficher
+            for id_activite in ids:
+                activite = self.activiteDao.lire(id_activite)
+                if activite:
+                    activite.afficher_details()
+    
+        except Exception as e:
+            import logging
+            logging.exception(f"Erreur lors de l'affichage de toutes les activités: {e}")
+
 
     # modifier activite 
+    def modifier(self, activite: Activite) -> bool:
+        """
+        Modifie une activité existante.
+        :param activite: objet Activite (ou Natation/Cyclisme/Course) avec les nouvelles valeurs
+        :return: True si la modification a réussi, False sinon
+        """
+
+        # Appel à la méthode modifier du DAO
+        return self.activiteDao.modifier(activite)
 
     # supprimer activite 
+    def supprimer(self, id_activite: int) -> bool:
+        return self.activiteDao.supprimer(id_activite)
 
-    # consulter une activite 
+    # consulter une activite            
+    # get all comments d'une activite
+    def get_commentaires_activite(self, id_activite: int):
+        """Retourne tous les commentaires d'une activité."""
+        return self.commentaireDao.lire_par_activite(id_activite)
 
-        
-                    # get all likes d'une activite 
-
-                    # get all comments 
+     # get all likes d'une activite
+    def get_likes_activite(self,id_activite:int):
+        return self.likeDao.par_activite(id_activite)
 
     # ------------------------- parcours 
 
     # CRUD parcours 
+
 
     
