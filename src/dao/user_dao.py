@@ -24,7 +24,7 @@ class UserDao(metaclass=Singleton):
                 with connection.cursor() as cursor:
                     cursor.execute(
                         """
-                        INSERT INTO users(prenom, nom, username, mot_de_passe)
+                        INSERT INTO app.users(prenom, nom, username, mot_de_passe)
                         VALUES (%(prenom)s, %(nom)s, %(username)s, %(mot_de_passe)s)
                         RETURNING id_user, created_at;
                         """,

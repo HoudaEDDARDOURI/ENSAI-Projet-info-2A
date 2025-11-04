@@ -15,7 +15,7 @@ def test_creer_ok():
     """Création d'utilisateur réussie"""
 
     # GIVEN
-    user = User(prenom="clara", nom="beauvais", username="clarab", mot_de_passe="secret123")
+    user = User(prenom="clara", nom="beauvais", username="123456789", mot_de_passe="secret123")
 
     # WHEN
     creation_ok = UserDao().creer(user)
