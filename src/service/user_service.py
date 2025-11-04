@@ -86,3 +86,14 @@ class UserService:
     # CRUD parcours 
 
     
+
+service = UserService()
+
+# Appeler la méthode creer()
+user = service.creer("Houda", "Edd", "claraaaaa", "motdepassefort")
+
+# Vérifier le résultat
+if user:
+    print(f"✅ Utilisateur créé avec succès : {user.username} (id={user.id_user})")
+else:
+    print("⚠️ Erreur lors de la création de l'utilisateur.")
