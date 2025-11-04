@@ -20,8 +20,10 @@ class ResetDatabase(metaclass=Singleton):
         schema_name = "projet_test_dao" if test_dao else os.environ.get("POSTGRES_SCHEMA", "public")
         create_schema = f"DROP SCHEMA IF EXISTS {schema_name} CASCADE; CREATE SCHEMA {schema_name};"
 
-        # Charger le fichier init_db.sql
-        init_db_path = "data/init_db.sql"
+        current_dir = os.path.dirname(os.path.abspath(__file__))  # utils/
+        project_root = os.path.abspath(os.path.join(current_dir, "..", ".."))  # racine du projet
+        init_db_path = os.path.join(project_root, "data", "init_db.sql")
+
         with open(init_db_path, encoding="utf-8") as f:
             init_db_as_string = f.read()
 
@@ -39,6 +41,7 @@ class ResetDatabase(metaclass=Singleton):
             user_service.modifier(u)
 
         return True
+
 
 if __name__ == "__main__":
     ResetDatabase().lancer()
