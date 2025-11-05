@@ -35,7 +35,7 @@ class UserService:
         return self.userdao.supprimer(id_user)
 
     def se_connecter(self, pseudo, mdp) -> User:
-        return self.userdao.se_connecter(pseudo, hash_password(mdp, pseudo))
+        return self.userdao.se_connecter(pseudo, hash_password(mdp))
 
     def pseudo_deja_utilise(self, username) -> bool:
         user = self.userdao.trouver_par_username(username)
@@ -61,6 +61,7 @@ class UserService:
         # Choix de la classe concrète selon le type de sport
         if type_sport.lower() == "course":
             nouvelle_activite = Course(
+                id_activite=None,
                 date=date,
                 distance=distance,
                 duree=duree,
@@ -68,10 +69,12 @@ class UserService:
                 titre=titre,
                 description=description,
                 id_user=id_user,
-                id_parcours=id_parcours
+                id_parcours=id_parcours,
+                denivele=0.0
             )
         elif type_sport.lower() == "natation":
             nouvelle_activite = Natation(
+                id_activite=None,
                 date=date,
                 distance=distance,
                 duree=duree,
@@ -79,10 +82,11 @@ class UserService:
                 titre=titre,
                 description=description,
                 id_user=id_user,
-                id_parcours=id_parcours
+                id_parcours=id_parcours, 
             )
         elif type_sport.lower() == "cyclisme":
             nouvelle_activite = Cyclisme(
+                id_activite=None,
                 date=date,
                 distance=distance,
                 duree=duree,
@@ -90,7 +94,8 @@ class UserService:
                 titre=titre,
                 description=description,
                 id_user=id_user,
-                id_parcours=id_parcours
+                id_parcours=id_parcours,
+                denivele=0.0
             )
         else:
             raise ValueError(f"Type de sport inconnu : {type_sport}")
