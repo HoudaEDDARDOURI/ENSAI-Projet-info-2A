@@ -15,6 +15,7 @@ from dao.db_connection import DBConnection
 from utils.singleton import Singleton
 from business_object.user import User
 
+
 class UserDao(metaclass=Singleton):
 
     def creer(self, user: User) -> bool:
