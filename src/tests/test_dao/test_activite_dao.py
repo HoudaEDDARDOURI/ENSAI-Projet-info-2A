@@ -35,8 +35,7 @@ def activite_course_exemple():
         description="Test course",
         denivele=150.0
     )
-    ActiviteDao().creer(course)
-    return course.id_activite
+    return course
 
 
 @pytest.fixture
@@ -59,8 +58,7 @@ def activite_natation_exemple():
         description="Test natation",
         denivele=0.0  # Ajout du dénivelé
     )
-    ActiviteDao().creer(natation)
-    return natation.id_activite
+    return natation
 
 
 @pytest.fixture
@@ -83,8 +81,7 @@ def activite_cyclisme_exemple():
         description="Test cyclisme",
         denivele=300.0
     )
-    ActiviteDao().creer(cyclisme)
-    return cyclisme.id_activite
+    return cyclisme
 
 
 def test_lire_activite_non_existante():
@@ -101,11 +98,12 @@ def test_lire_activite_non_existante():
 
 def test_lire_activite_type_course(activite_course_exemple):
     """Vérifie que la lecture d'une Course retourne bien un objet Course"""
-    # GIVEN
-    id_course = activite_course_exemple
+    # GIVEN : Créer l'activité dans la base de données avant de la lire
+    course = activite_course_exemple
+    ActiviteDao().creer(course)
 
     # WHEN
-    activite_lue = ActiviteDao().lire(id_course)
+    activite_lue = ActiviteDao().lire(course.id_activite)
 
     # THEN
     assert activite_lue is not None
@@ -117,10 +115,11 @@ def test_lire_activite_type_course(activite_course_exemple):
 def test_lire_activite_type_natation(activite_natation_exemple):
     """Vérifie que la lecture d'une Natation retourne bien un objet Natation"""
     # GIVEN
-    id_natation = activite_natation_exemple
+    natation = activite_natation_exemple
+    ActiviteDao().creer(natation)
 
     # WHEN
-    activite_lue = ActiviteDao().lire(id_natation)
+    activite_lue = ActiviteDao().lire(natation.id_activite)
 
     # THEN
     assert activite_lue is not None
@@ -131,10 +130,11 @@ def test_lire_activite_type_natation(activite_natation_exemple):
 def test_lire_activite_type_cyclisme(activite_cyclisme_exemple):
     """Vérifie que la lecture d'un Cyclisme retourne bien un objet Cyclisme"""
     # GIVEN
-    id_cyclisme = activite_cyclisme_exemple
+    cyclisme = activite_cyclisme_exemple
+    ActiviteDao().creer(cyclisme)
 
     # WHEN
-    activite_lue = ActiviteDao().lire(id_cyclisme)
+    activite_lue = ActiviteDao().lire(cyclisme.id_activite)
 
     # THEN
     assert activite_lue is not None
@@ -146,19 +146,7 @@ def test_lire_activite_type_cyclisme(activite_cyclisme_exemple):
 def test_creer_activite_ok():
     """Création d'activité réussie"""
     # GIVEN
-    activite = Course(
-        id_activite=None,
-        id_user=1,
-        date=datetime.now(),
-        distance=5.0,
-        duree=timedelta(minutes=30),  # Utilisation de timedelta pour la durée
-        trace="trace_test",
-        id_parcours=None,
-        titre="Test création",
-        description="Activité de test",
-        denivele=150.0
-    )
-
+    activite = activite_course_exemple
     # WHEN
     creation_ok = ActiviteDao().creer(activite)
 
@@ -175,7 +163,7 @@ def test_creer_activite_ko():
         id_user="invalide",  # Type incorrect
         date=datetime.now(),
         distance=5.0,
-        duree=timedelta(minutes=30),  # Utilisation de timedelta pour la durée
+        duree=timedelta(minutes=30),
         trace="trace_test",
         id_parcours=None,
         titre="Test échec",
@@ -183,58 +171,57 @@ def test_creer_activite_ko():
         denivele=150.0
     )
 
-    # WHEN
-    creation_ok = ActiviteDao().creer(activite)
+    # WHEN & THEN : Vérification de l'échec de création
+    try:
+        ActiviteDao().creer(activite)
+        assert False, "La création de l'activité n'a pas échoué comme prévu"
+    except Exception as e:
+        print(f"Erreur capturée: {e}")
+        # Vous pouvez adapter cette vérification selon le type d'erreur que vous attendez
+        assert "invalid input syntax for type integer" in str(e)  # Vérifier l'erreur attendue
 
-    # THEN
-    assert not creation_ok
 
-
-def test_modifier_activite_ok():
+def test_modifier_activite_ok(activite_course_exemple):
     """Modification d'activité réussie"""
-    # GIVEN
-    activite = Course(
-        id_activite=None,
-        id_user=1,
-        date=datetime.now(),
-        distance=5.0,
-        duree=timedelta(minutes=30),  # Utilisation de timedelta pour la durée
-        trace="trace_test",
-        id_parcours=None,
-        titre="Avant modification",
-        description="Description avant",
-        denivele=150.0
-    )
+
+    # GIVEN : L'activité est créée grâce à la fixture
+    activite = activite_course_exemple
     ActiviteDao().creer(activite)
 
+    # Modification de l'activité
     activite.titre = "Titre modifié"
     activite.description = "Description modifiée"
     activite.distance = 12.5
 
-    # WHEN
+    # WHEN : Modification de l'activité dans la base de données
     modification_ok = ActiviteDao().modifier(activite)
 
-    # THEN
+    # THEN : Vérification que la modification a réussi
     assert modification_ok
 
-    # Vérification de la modification
+    # Récupération de l'activité modifiée depuis la base de données
     activite_modifiee = ActiviteDao().lire(activite.id_activite)
+
+    # Vérification des modifications
     assert activite_modifiee.titre == "Titre modifié"
     assert activite_modifiee.distance == 12.5
+    assert activite_modifiee.description == "Description modifiée"
+
 
 
 def test_modifier_activite_avec_denivele_ok(activite_course_exemple):
     """Modification d'une activité avec dénivelé réussie"""
-    # GIVEN
-    course = ActiviteDao().lire(activite_course_exemple)
+    # GIVEN : Créer l'activité dans la base de données avant de la lire
+    course = activite_course_exemple
+    ActiviteDao().creer(course)
+
+    # WHEN : Modification de l'activité dans la base de données
     course.titre = "Course modifiée"
     course.denivele = 200.0
     course.distance = 15.0
-
-    # WHEN
     modification_ok = ActiviteDao().modifier(course)
 
-    # THEN
+    # THEN : Vérification que la modification a réussi
     assert modification_ok
 
 
@@ -263,23 +250,18 @@ def test_modifier_activite_ko():
 
 def test_supprimer_activite_ok():
     """Suppression d'activité réussie"""
-    # GIVEN
-    activite = Course(
-        id_activite=None,
-        id_user=1,
-        date=datetime.now(),
-        distance=5.0,
-        duree=timedelta(minutes=30),  # Utilisation de timedelta pour la durée
-        trace="trace_a_supprimer",
-        id_parcours=None,
-        titre="À supprimer",
-        description="Test suppression",
-        denivele=150.0
-    )
-    ActiviteDao().creer(activite)
+    # GIVEN : Créer l'activité dans la base de données avant de la supprimer
+    activite = activite_course_exemple
+    creation_ok = ActiviteDao().creer(activite)
+    assert creation_ok
+    assert activite.id_activite is not None  # Assurez-vous que l'ID est généré
 
-    # WHEN
+    # WHEN : Suppression de l'activité
     suppression_ok = ActiviteDao().supprimer(activite.id_activite)
 
-    # THEN
+    # THEN : Vérification que la suppression a réussi
     assert suppression_ok
+
+    # Vérification que l'activité a bien été supprimée
+    activite_supprimee = ActiviteDao().lire(activite.id_activite)
+    assert activite_supprimee is None
