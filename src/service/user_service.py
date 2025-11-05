@@ -154,7 +154,7 @@ class UserService:
     # get all likes d'une activite
 
     def get_likes_activite(self, id_activite: int):
-        return self.likeDao.par_activite(id_activite)
+        return self.likeDao.lire_par_activite(id_activite)
 
     # ------------------------- parcours 
 
