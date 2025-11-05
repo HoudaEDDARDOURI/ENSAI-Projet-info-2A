@@ -45,7 +45,7 @@ class LikeDao(metaclass=Singleton):
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT * FROM app.likes WHERE id_activite = %(id_activite)s;",
+                        "SELECT * FROM likes WHERE id_activite = %(id_activite)s;",
                         {"id_activite": id_activite},
                     )
                     results = cursor.fetchall()
