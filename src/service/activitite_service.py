@@ -16,7 +16,6 @@ class ActiviteService:
         self.commentaireDao = CommentaireDao()
         self.likeDao = LikeDao()
 
-
     def creer_activite(self, date, type_sport, distance, duree, trace, titre, description, id_user,
                        id_parcours) -> Activite:
 
@@ -89,7 +88,6 @@ class ActiviteService:
                     activite.afficher_details()
     
         except Exception as e:
-            import logging
             logging.exception(f"Erreur lors de l'affichage de toutes les activités: {e}")
 
     # modifier activite 
