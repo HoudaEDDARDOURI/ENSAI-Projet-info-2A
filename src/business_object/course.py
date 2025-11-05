@@ -19,9 +19,15 @@ class Course(Activite):
         self.denivele = denivele
         self.vitesse_minkm = None
 
+    def afficher_course(self):
+        print(
+            f"Course: {self.titre}, Distance: {self.distance} km, "
+            f"Dénivelé: {self.denivele} m, Vitesse: {self.vitesse_minkm:.2f} min/km"
+        )
+     
     def afficher_details(self):
-        print(f"Course: {self.titre}, Distance: {self.distance} km, "
-                f"Dénivelé: {self.denivele} m, Vitesse: {self.vitesse_minkm:.2f} min/km")
+        """Implémentation de la méthode abstraite de Activite"""
+        self.afficher_course()
 
     def calculer_vitesse_course(self) -> float:
         """Calcule la vitesse moyenne en minutes par km."""

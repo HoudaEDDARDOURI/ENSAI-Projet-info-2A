@@ -1,3 +1,15 @@
+from dotenv import load_dotenv
+import os
+
+load_dotenv()  # charge les variables depuis le fichier .env
+
+host = os.environ['POSTGRES_HOST']
+port = os.environ['POSTGRES_PORT']
+user = os.environ['POSTGRES_USER']
+password = os.environ['POSTGRES_PASSWORD']
+database = os.environ['POSTGRES_DATABASE']
+
+
 import logging
 from dao.db_connection import DBConnection
 from utils.singleton import Singleton

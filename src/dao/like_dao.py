@@ -1,7 +1,8 @@
 import logging
 from utils.singleton import Singleton
 from dao.db_connection import DBConnection
-from business_object.like import Like 
+from business_object.like import Like
+
 
 class LikeDao(metaclass=Singleton):
     """Classe contenant les méthodes pour accéder aux likes de la base de données"""
@@ -14,7 +15,7 @@ class LikeDao(metaclass=Singleton):
                 with connection.cursor() as cursor:
                     cursor.execute(
                         """
-                        INSERT INTO app.likes (
+                        INSERT INTO likes (
                             id_user, id_activite
                         ) VALUES (
                             %(id_user)s, %(id_activite)s
@@ -36,31 +37,31 @@ class LikeDao(metaclass=Singleton):
             created = True
 
         return created
-
-    def lire(self, id_like: int) -> Like | None:
-        """Récupère toutes les informations d'un like à partir de son ID"""
-        res = None
+    
+    def lire_par_activite(self, id_activite: int) -> list[Like]:
+        """Récupère tous les likes associés à une activité."""
+        likes = []
         try:
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT * FROM app.likes WHERE id_like = %(id_like)s;",
-                        {"id_like": id_like},
+                        "SELECT * FROM app.likes WHERE id_activite = %(id_activite)s;",
+                        {"id_activite": id_activite},
                     )
-                    res = cursor.fetchone()
+                    results = cursor.fetchall()
+                    for res in results:
+                        likes.append(
+                            Like(
+                                id_like=res["id_like"],
+                                id_user=res["id_user"],
+                                id_activite=res["id_activite"],
+                                created_at=res["created_at"],
+                            )
+                        )
         except Exception as e:
-            logging.error(f"Erreur lors de la lecture du like : {e}")
+            logging.error(f"Erreur lors de la lecture des likes pour l'activité {id_activite}:{e}")
 
-        like = None
-        if res:
-            like = Like(
-                id_like=res["id_like"],
-                id_user=res["id_user"],
-                id_activite=res["id_activite"],
-                created_at=res["created_at"],
-            )
-
-        return like
+        return likes
 
     def supprimer(self, id_like: int) -> bool:
         """Supprime un like par son ID"""
@@ -69,7 +70,7 @@ class LikeDao(metaclass=Singleton):
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "DELETE FROM app.likes WHERE id_like = %(id_like)s RETURNING id_like;",
+                        "DELETE FROM likes WHERE id_like = %(id_like)s RETURNING id_like;",
                         {"id_like": id_like},
                     )
                     res = cursor.fetchone()
@@ -82,5 +83,3 @@ class LikeDao(metaclass=Singleton):
         return deleted
 
     
-    # get all likes par user et par activite 
-    # get all comments par user et par activite 

@@ -9,6 +9,8 @@ from dao.db_connection import DBConnection
 from service.user_service import UserService
 
 
+import psycopg2
+
 class ResetDatabase(metaclass=Singleton):
     """Réinitialisation de la base de données à partir de init_db.sql"""
 
@@ -20,26 +22,29 @@ class ResetDatabase(metaclass=Singleton):
         schema_name = "projet_test_dao" if test_dao else os.environ.get("POSTGRES_SCHEMA", "public")
         create_schema = f"DROP SCHEMA IF EXISTS {schema_name} CASCADE; CREATE SCHEMA {schema_name};"
 
-        # Charger le fichier init_db.sql
-        init_db_path = "data/init_db.sql"
+        current_dir = os.path.dirname(os.path.abspath(__file__))  # utils/
+        project_root = os.path.abspath(os.path.join(current_dir, "..", ".."))  # racine du projet
+        init_db_path = os.path.join(project_root, "data", "init_db.sql")
+
         with open(init_db_path, encoding="utf-8") as f:
             init_db_as_string = f.read()
 
         try:
-            with DBConnection().connection as connection:
+            # Connexion à la base de données principale (par exemple, "postgres")
+            with psycopg2.connect(dsn="dbname=postgres user=postgres password=secret") as connection:
+                # Désactive les transactions pour permettre la création de base de données/schéma
+                connection.autocommit = True
                 with connection.cursor() as cursor:
+                    # Crée le schéma ou réinitialise la base
                     cursor.execute(create_schema)
                     cursor.execute(init_db_as_string)
+
+            user_service = UserService()
+            for u in user_service.lister_tous(inclure_mdp=True):
+                user_service.modifier(u)
+
         except Exception as e:
             logging.error(e)
             raise
 
-        user_service = UserService()
-        for u in user_service.lister_tous(inclure_mdp=True):
-            user_service.modifier(u)
-
         return True
-
-if __name__ == "__main__":
-    ResetDatabase().lancer()
-    ResetDatabase().lancer(True)
