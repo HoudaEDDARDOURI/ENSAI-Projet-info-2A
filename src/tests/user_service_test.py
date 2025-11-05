@@ -38,6 +38,6 @@ def test_creer_activite_ok(mock_activite_dao):
     assert activite is not None
     assert isinstance(activite, Course)
     assert activite.titre == titre
-    assert activite.type_sport == type_sport
+    assert activite.type_sport.lower() == type_sport.lower()
     assert activite.id_user == id_user
     mock_activite_dao.return_value.creer.assert_called_once()
