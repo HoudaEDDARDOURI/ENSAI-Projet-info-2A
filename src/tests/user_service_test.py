@@ -1,26 +1,25 @@
-from unittest.mock import MagicMock
-from datetime import date
+from datetime import date, timedelta
+from unittest.mock import patch
 from service.user_service import UserService
-from dao.activite_dao import ActiviteDao
-from business_object.activite import Activite
+from business_object.course import Course
 
 
-def test_creer_activite_ok():
+@patch("service.user_service.ActiviteDao")
+def test_creer_activite_ok(mock_activite_dao):
     """Test de la création d'une activité réussie"""
 
     # GIVEN : les paramètres d'entrée
+    mock_activite_dao.return_value.creer.return_value = True
+
     date_activite = date(2025, 11, 4)
     type_sport = "Course"
     distance = 10.5
-    duree = "00:50:00"
+    duree = timedelta(minutes=50)  # <-- ici c'est un timedelta
     trace = "trace_test.gpx"
     titre = "Course test unitaire"
     description = "Activité de test unitaire"
     id_user = 1
     id_parcours = 1
-
-    # On mocke la méthode creer() du DAO
-    ActiviteDao().creer = MagicMock(return_value=True)
 
     # WHEN : appel du service
     activite = UserService().creer_activite(
@@ -37,7 +36,8 @@ def test_creer_activite_ok():
 
     # THEN : vérifications
     assert activite is not None
-    assert isinstance(activite, Activite)
+    assert isinstance(activite, Course)
     assert activite.titre == titre
     assert activite.type_sport == type_sport
     assert activite.id_user == id_user
+    mock_activite_dao.return_value.creer.assert_called_once()

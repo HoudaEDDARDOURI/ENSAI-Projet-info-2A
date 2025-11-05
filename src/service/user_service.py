@@ -62,7 +62,6 @@ class UserService:
         if type_sport.lower() == "course":
             nouvelle_activite = Course(
                 date=date,
-                type_sport=type_sport,
                 distance=distance,
                 duree=duree,
                 trace=trace,
@@ -74,7 +73,6 @@ class UserService:
         elif type_sport.lower() == "natation":
             nouvelle_activite = Natation(
                 date=date,
-                type_sport=type_sport,
                 distance=distance,
                 duree=duree,
                 trace=trace,
@@ -86,7 +84,6 @@ class UserService:
         elif type_sport.lower() == "cyclisme":
             nouvelle_activite = Cyclisme(
                 date=date,
-                type_sport=type_sport,
                 distance=distance,
                 duree=duree,
                 trace=trace,

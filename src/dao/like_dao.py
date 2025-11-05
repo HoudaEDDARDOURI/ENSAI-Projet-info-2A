@@ -59,7 +59,7 @@ class LikeDao(metaclass=Singleton):
                             )
                         )
         except Exception as e:
-            logging.error(f"Erreur lors de la lecture des likes pour l'activité {id_activite} : {e}")
+            logging.error(f"Erreur lors de la lecture des likes pour l'activité {id_activite}:{e}")
 
         return likes
 

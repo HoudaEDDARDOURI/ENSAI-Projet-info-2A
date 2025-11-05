@@ -1,9 +1,8 @@
 from __future__ import annotations
 from datetime import date, timedelta
 from abc import ABC, abstractmethod
-
-
-
+ 
+ 
 class Activite(ABC):
     def __init__(self, id_user: int, date: date, type_sport: str, distance: float, duree: timedelta,
                  trace: str, id_parcours: int, titre: str, description: str,
