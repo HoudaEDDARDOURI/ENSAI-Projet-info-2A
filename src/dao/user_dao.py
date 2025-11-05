@@ -218,3 +218,5 @@ class UserDao(metaclass=Singleton):
             logging.error(f"Erreur lors de la modification de l'utilisateur : {e}")
 
         return res == 1
+
+    
