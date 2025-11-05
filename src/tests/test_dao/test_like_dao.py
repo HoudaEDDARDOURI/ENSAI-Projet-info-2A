@@ -2,6 +2,9 @@ import pytest
 from dao.like_dao import LikeDao
 from business_object.like import Like
 from utils.reset_database import ResetDatabase
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 @pytest.fixture(scope="function", autouse=True)
