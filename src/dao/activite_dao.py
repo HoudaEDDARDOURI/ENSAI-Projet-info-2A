@@ -22,10 +22,10 @@ class ActiviteDao(metaclass=Singleton):
                         """
                         INSERT INTO activite(
                             id_user, date_activite, type_sport, distance, duree, trace, id_parcours,
-                            titre, description
+                            titre, description, denivele
                         ) VALUES (
                             %(id_user)s, %(date_activite)s, %(type_sport)s, %(distance)s, %(duree)s,
-                            %(trace)s, %(id_parcours)s, %(titre)s, %(description)s
+                            %(trace)s, %(id_parcours)s, %(titre)s, %(description)s, %(denivele)s
                         )
                         RETURNING id_activite;
                         """,
@@ -39,6 +39,7 @@ class ActiviteDao(metaclass=Singleton):
                             "id_parcours": activite.id_parcours,
                             "titre": activite.titre,
                             "description": activite.description,
+                            "denivele": activite.denivele if hasattr(activite, 'denivele') else 0.0
                         },
                     )
                     res = cursor.fetchone()
@@ -71,8 +72,35 @@ class ActiviteDao(metaclass=Singleton):
                     if res:
                         type_sport = res["type_sport"].lower()
 
+                        # Si c'est une activité de type "course" ou "cyclisme"
                         if type_sport == "course":
-                            return Course(
+                            return Course(  # Utiliser la sous-classe appropriée
+                                id_activite=res["id_activite"],
+                                id_user=res["id_user"],
+                                date=res["date_activite"],
+                                distance=res["distance"],
+                                duree=res["duree"],
+                                trace=res["trace"],
+                                id_parcours=res["id_parcours"],
+                                titre=res["titre"],
+                                description=res["description"],
+                                denivele=res.get("denivele", 0.0)  # Le dénivelé est optionnel
+                            )
+                        elif type_sport == "cyclisme":
+                            return Cyclisme(  # Instancier Cyclisme
+                                id_activite=res["id_activite"],
+                                id_user=res["id_user"],
+                                date=res["date_activite"],
+                                distance=res["distance"],
+                                duree=res["duree"],
+                                trace=res["trace"],
+                                id_parcours=res["id_parcours"],
+                                titre=res["titre"],
+                                description=res["description"],
+                                denivele=res.get("denivele", 0.0)  # Le dénivelé est optionnel
+                            )
+                        elif type_sport == "natation":
+                            return Natation(  # Utiliser la sous-classe appropriée
                                 id_activite=res["id_activite"],
                                 id_user=res["id_user"],
                                 date=res["date_activite"],
@@ -84,52 +112,23 @@ class ActiviteDao(metaclass=Singleton):
                                 description=res["description"],
                                 denivele=res.get("denivele", 0.0)
                             )
-                        elif type_sport == "natation":
-                            return Natation(
-                                id_activite=res["id_activite"],
-                                id_user=res["id_user"],
-                                date=res["date"],
-                                distance=res["distance"],
-                                duree=res["duree"],
-                                trace=res["trace"],
-                                id_parcours=res["id_parcours"],
-                                titre=res["titre"],
-                                description=res["description"],
-                            )
-                        elif type_sport == "cyclisme":
-                            return Cyclisme(
-                                id_activite=res["id_activite"],
-                                id_user=res["id_user"],
-                                date=res["date"],
-                                distance=res["distance"],
-                                duree=res["duree"],
-                                trace=res["trace"],
-                                id_parcours=res["id_parcours"],
-                                titre=res["titre"],
-                                description=res["description"],
-                                denivele=res.get("denivele", 0.0)
-                            )
                         else:
+                            logging.warning(f"Type d'activité inconnu : {type_sport}")
 
-                            return Activite(
-                                id_activite=res["id_activite"],
-                                id_user=res["id_user"],
-                                type_sport=res["type_sport"],
-                                distance=res["distance"],
-                                duree=res["duree"],
-                                trace=res["trace"],
-                                id_parcours=res["id_parcours"],
-                                titre=res["titre"],
-                                description=res["description"],
-                            )
         except psycopg2.Error as e:
             logging.error(f"Erreur SQL : {e.pgerror}")
         except Exception:
             logging.exception("Erreur inattendue lors de la lecture de l'activité")
+        
         return None
+
 
     def modifier(self, activite: Activite) -> bool:
         """Met à jour les informations d’une activité existante."""
+        if activite.id_activite is None:
+            logging.error("L'ID de l'activité est nécessaire pour la modification.")
+            return False
+        
         try:
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
@@ -154,6 +153,7 @@ class ActiviteDao(metaclass=Singleton):
                         "description": activite.description,
                     }
 
+                    # Si l'activité a un dénivelé, on l'ajoute à la requête
                     if hasattr(activite, "denivele"):
                         sql += ", denivele = %(denivele)s"
                         params["denivele"] = activite.denivele
@@ -161,7 +161,10 @@ class ActiviteDao(metaclass=Singleton):
                     sql += " WHERE id_activite = %(id_activite)s;"
 
                     cursor.execute(sql, params)
-                    return cursor.rowcount > 0
+                    if cursor.rowcount == 0:
+                        logging.warning(f"Aucune modification effectuée pour l'activité {activite.id_activite}")
+                        return False  # Aucune ligne modifiée
+                    return True
         except psycopg2.Error as e:
             logging.error(f"Erreur SQL : {e.pgerror}")
         except Exception:
