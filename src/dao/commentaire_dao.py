@@ -40,8 +40,9 @@ class CommentaireDao(metaclass=Singleton):
             logging.exception("Erreur inattendue (CREATE commentaire)")
         return False
 
-    def lire(self, id_commentaire: int) -> Commentaire | None:
-        """Récupère un commentaire avec son identifiant."""
+    def lire_par_activite(self, id_activite: int) -> list[Commentaire]:
+        """Récupère tous les commentaires associés à une activité."""
+        commentaires = []
         try:
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
@@ -49,24 +50,27 @@ class CommentaireDao(metaclass=Singleton):
                         """
                         SELECT *
                         FROM commentaire
-                        WHERE id_commentaire = %(id)s;
+                        WHERE id_activite = %(id_activite)s
+                        ORDER BY date ASC;  -- optionnel : trier par date
                         """,
-                        {"id": id_commentaire},
+                        {"id_activite": id_activite},
                     )
-                    res = cursor.fetchone()
-                    if res:
-                        return Commentaire(
-                            id_commentaire=res["id_commentaire"],
-                            contenu=res["contenu"],
-                            date=res["date"],
-                            id_user=res["id_user"],
-                            id_activite=res["id_activite"],
+                    results = cursor.fetchall()
+                    for res in results:
+                        commentaires.append(
+                            Commentaire(
+                                id_commentaire=res["id_commentaire"],
+                                contenu=res["contenu"],
+                                date=res["date"],
+                                id_user=res["id_user"],
+                                id_activite=res["id_activite"],
+                            )
                         )
         except psycopg2.Error as e:
             logging.error(f"Erreur SQL : {e.pgerror or e}")
-        except Exception:
-            logging.exception("Erreur inattendue dans la lecture du commentaire")
-        return None
+        except Exception as e:
+            logging.exception(f"Erreur inattendue dans la lecture des commentaires : {e}")
+        return commentaires
 
     def modifier(self, commentaire: Commentaire) -> bool:
         """Met à jour le contenu ou la date d’un commentaire existant."""
