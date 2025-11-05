@@ -102,20 +102,18 @@ def test_get_likes_activite(user_service):
     id_user = 1
     id_parcours = 1
 
+    # 1️⃣ Créer l'activité
     activite = user_service.creer_activite(
         date_activite, type_sport, distance, duree,
         trace, titre, description, id_user, id_parcours
     )
     assert activite is not None
 
-    # Ajouter un like via le DAO
-    like = Like(
-        user=id_user,
-        activite=activite.id_activite
-    )
+    # 2️⃣ Ajouter un like via le DAO
+    like = Like(id_user=id_user, id_activite=activite.id_activite)
     user_service.likeDao.creer(like)
 
-    # Vérifier avec la méthode du service
+    # 3️⃣ Vérifier avec la méthode du service
     likes = user_service.get_likes_activite(activite.id_activite)
     assert len(likes) > 0
-    assert any(like.user == id_user for like in likes)
+    assert any(like_obj.id_user == id_user for like_obj in likes)
