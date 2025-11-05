@@ -35,7 +35,7 @@ class UserService:
         return self.userdao.supprimer(id_user)
 
     def se_connecter(self, pseudo, mdp) -> User:
-        return self.userdao.se_connecter(pseudo, hash_password(mdp, pseudo))
+        return self.userdao.se_connecter(pseudo, hash_password(mdp))
 
     def pseudo_deja_utilise(self, username) -> bool:
         user = self.userdao.trouver_par_username(username)
