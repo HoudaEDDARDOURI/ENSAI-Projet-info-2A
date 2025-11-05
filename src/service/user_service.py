@@ -19,7 +19,7 @@ class UserService:
         self.commentaireDao = CommentaireDao()
         self.likeDao = LikeDao()
 
-    def creer(self, prenom, nom, username, mot_de_passe) -> User:
+    def creer_user(self, prenom, nom, username, mot_de_passe) -> User:
         """Création d'un utilisateur à partir de ses attributs"""
 
         nouveau_user = User(
@@ -31,7 +31,7 @@ class UserService:
 
         return nouveau_user if self.userdao.creer(nouveau_user) else None
 
-    def supprimer(self, id_user: int) -> bool:
+    def supprimer_user(self, id_user: int) -> bool:
         return self.userdao.supprimer(id_user)
 
     def se_connecter(self, pseudo, mdp) -> User:
@@ -47,12 +47,21 @@ class UserService:
         user.suivre(autre_user)
         return self.userdao.ajouter_suivi(user.id_user, autre_user.id_user)
 
-    # lister ses followers
+    def lire_user(self, id_user: int) -> User | None:
+        """Retourne un utilisateur selon son identifiant."""
+        return self.userdao.lire(id_user)
 
-    # trouver par id (pertinent de l'ajouter ?)
+    def modifier_user(self, user: User) -> bool:
+        """Met à jour les informations d'un utilisateur."""
+        if not user.id_user:
+            print("Impossible de modifier : l'utilisateur n'a pas d'ID.")
+            return False
+        return self.userdao.modifier(user)
 
-    # modifier user 
-
+    def lister_followers(self, user: User):
+        """Liste les followers de l'utilisateur"""
+        return self.dao.lister_followers(user)
+        
     # creer activite 
     def creer_activite(self, date, type_sport, distance, duree, trace, titre, description, id_user,
                        id_parcours) -> Activite:
@@ -104,7 +113,7 @@ class UserService:
         return nouvelle_activite if self.activiteDao.creer(nouvelle_activite) else None
     # afficher all activities 
 
-    def afficher_toutes(self):
+    def afficher_toutes_activites(self):
         """
         Affiche toutes les activités en utilisant la méthode 'lire' du DAO.
         """
@@ -131,7 +140,7 @@ class UserService:
 
     # modifier activite 
 
-    def modifier(self, activite: Activite) -> bool:
+    def modifier_activite(self, activite: Activite) -> bool:
         """
         Modifie une activité existante.
         :param activite: objet Activite (ou Natation/Cyclisme/Course) avec les nouvelles valeurs
