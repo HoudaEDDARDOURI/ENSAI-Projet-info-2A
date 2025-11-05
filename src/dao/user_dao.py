@@ -4,8 +4,8 @@ import logging
 from dao.db_connection import DBConnection
 from utils.singleton import Singleton
 from business_object.user import User
-load_dotenv()  # charge les variables depuis le fichier .env
 
+load_dotenv()  # charge les variables depuis le fichier .env
 host = os.environ['POSTGRES_HOST']
 port = os.environ['POSTGRES_PORT']
 user = os.environ['POSTGRES_USER']
