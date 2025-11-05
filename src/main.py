@@ -1,15 +1,9 @@
 import gpxpy
 from datetime import timedelta, date
-
 from business_object.course import Course
 from service.user_service import UserService
 from dao.Activite_dao import ActiviteDao
-from datetime import date
-
 from dao.db_connection import DBConnection
-
-
-
 
 
 def importer_activite_gpx(chemin_fichier: str, id_user: int):
@@ -37,7 +31,6 @@ def importer_activite_gpx(chemin_fichier: str, id_user: int):
         denivele=up_m
     )
 
-
     print("\n=== Résumé activité ===")
     print(f"Nom:   {activite.titre}")
     print(f"Type:  {activite.type_sport}")
@@ -63,8 +56,8 @@ if __name__ == "__main__":
         print("⚠️ Erreur lors de la création de l'utilisateur.")
         exit()
 
-    # 2Importer une activité depuis un fichier GPX
-    chemin_gpx = "/home/onyxia/work/ENSAI-Projet-info-2A/data/strava_activities.gpx"  # adapte le chemin
+    # 2Importer une activité depuis un fichier GPX et adapte chemin
+    chemin_gpx = "/home/onyxia/work/ENSAI-Projet-info-2A/data/strava_activities.gpx"
     activite = importer_activite_gpx(chemin_gpx, user.id_user)
 
     # Enregistrer l’activité dans la base via le DAO
@@ -81,7 +74,6 @@ if __name__ == "__main__":
         activite_lue = dao.lire(activite.id_activite)
         print("\nActivité relue depuis la base :")
         print(activite_lue)
-
 
     # Fermer la connexion avant de modifier la BD
 db = DBConnection()
