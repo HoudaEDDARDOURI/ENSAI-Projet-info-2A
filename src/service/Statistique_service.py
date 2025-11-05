@@ -10,11 +10,22 @@ class StatistiqueService():
             raise TypeError("L'attribut 'user' doit être une instance de la classe User.")
         self.user = user
 
-    def get_nombre_services(self):
-        """
-        Calcule et retourne le nombre d'activités (services) de l'utilisateur.
-        """
-        return len(self.user.activites)
+
+def get_nombre_services_semaine(self, id_utilisateur):
+    """Calcule et retourne le nombre d'activités (services)
+    de l'utilisateur au cours de la semaine."""
+
+    aujourd_hui = date.today()
+    debut_semaine, fin_semaine = self._get_bornes_semaine(aujourd_hui)
+
+    toutes_activites = self.activitite_service.afficher_toutes_activites(id_utilisateur)
+
+    activites_semaine = [
+        a for a in toutes_activites
+        if debut_semaine <= a.date_activite <= fin_semaine
+    ]
+
+    return len(activites_semaine)
 
     # Nouvelle méthode utilitaire pour déterminer les bornes de la semaine
     def _get_bornes_semaine(self, date_reference):
