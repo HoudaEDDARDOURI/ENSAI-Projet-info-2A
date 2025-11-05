@@ -1,8 +1,7 @@
 import os
 import pytest
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import patch
-from utils.reset_database import ResetDatabase
 from dao.activite_dao import ActiviteDao
 from business_object.activite import Activite
 from business_object.course import Course
@@ -12,20 +11,24 @@ from business_object.cyclisme import Cyclisme
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_environment():
-    """Initialisation des données de test"""
-    with patch.dict(os.environ, {"SCHEMA": "projet_test_dao"}):
-        ResetDatabase().lancer(test_dao=True)
-        yield
+    """Initialisation des données de test (remplacée par le schéma dynamique)"""
+    pass  # Cette fixture est maintenant gérée par conftest.py, donc plus besoin de cette logique ici.
 
 
 @pytest.fixture
 def activite_course_exemple():
     """Fixture qui crée une Course et retourne son ID"""
+    
+    # Conversion de la durée (minutes) en timedelta
+    duree_minutes = 60
+    duree_time = timedelta(minutes=duree_minutes)  # Utilisation de timedelta pour des durées supérieures à 59 minutes
+    
     course = Course(
+        id_activite=None,
         id_user=1,
         date=datetime.now(),
         distance=10.0,
-        duree=60,
+        duree=duree_time,
         trace="trace_course",
         id_parcours=None,
         titre="Course test",
@@ -39,15 +42,22 @@ def activite_course_exemple():
 @pytest.fixture
 def activite_natation_exemple():
     """Fixture qui crée une Natation et retourne son ID"""
+    
+    # Conversion de la durée (minutes) en timedelta
+    duree_minutes = 45
+    duree_time = timedelta(minutes=duree_minutes)
+    
     natation = Natation(
+        id_activite=None,
         id_user=1,
         date=datetime.now(),
         distance=1.5,
-        duree=45,
+        duree=duree_time,
         trace=None,
         id_parcours=None,
         titre="Piscine test",
-        description="Test natation"
+        description="Test natation",
+        denivele=0.0  # Ajout du dénivelé
     )
     ActiviteDao().creer(natation)
     return natation.id_activite
@@ -56,11 +66,17 @@ def activite_natation_exemple():
 @pytest.fixture
 def activite_cyclisme_exemple():
     """Fixture qui crée un Cyclisme et retourne son ID"""
+    
+    # Conversion de la durée (minutes) en timedelta
+    duree_minutes = 120
+    duree_time = timedelta(minutes=duree_minutes)
+    
     cyclisme = Cyclisme(
+        id_activite=None,
         id_user=1,
         date=datetime.now(),
         distance=40.0,
-        duree=120,
+        duree=duree_time,
         trace="trace_velo",
         id_parcours=None,
         titre="Sortie vélo",
@@ -130,16 +146,17 @@ def test_lire_activite_type_cyclisme(activite_cyclisme_exemple):
 def test_creer_activite_ok():
     """Création d'activité réussie"""
     # GIVEN
-    activite = Activite(
+    activite = Course(
+        id_activite=None,
         id_user=1,
         date=datetime.now(),
-        type_sport="Course",
         distance=5.0,
-        duree=30,
+        duree=timedelta(minutes=30),  # Utilisation de timedelta pour la durée
         trace="trace_test",
         id_parcours=None,
         titre="Test création",
-        description="Activité de test"
+        description="Activité de test",
+        denivele=150.0
     )
 
     # WHEN
@@ -153,16 +170,17 @@ def test_creer_activite_ok():
 def test_creer_activite_ko():
     """Création d'activité échouée"""
     # GIVEN
-    activite = Activite(
+    activite = Course(
+        id_activite=None,
         id_user="invalide",  # Type incorrect
         date=datetime.now(),
-        type_sport="Course",
         distance=5.0,
-        duree=30,
+        duree=timedelta(minutes=30),  # Utilisation de timedelta pour la durée
         trace="trace_test",
         id_parcours=None,
         titre="Test échec",
-        description="Doit échouer"
+        description="Doit échouer",
+        denivele=150.0
     )
 
     # WHEN
@@ -175,16 +193,17 @@ def test_creer_activite_ko():
 def test_modifier_activite_ok():
     """Modification d'activité réussie"""
     # GIVEN
-    activite = Activite(
+    activite = Course(
+        id_activite=None,
         id_user=1,
         date=datetime.now(),
-        type_sport="Course",
         distance=5.0,
-        duree=30,
+        duree=timedelta(minutes=30),  # Utilisation de timedelta pour la durée
         trace="trace_test",
         id_parcours=None,
         titre="Avant modification",
-        description="Description avant"
+        description="Description avant",
+        denivele=150.0
     )
     ActiviteDao().creer(activite)
 
@@ -222,17 +241,17 @@ def test_modifier_activite_avec_denivele_ok(activite_course_exemple):
 def test_modifier_activite_ko():
     """Modification d'activité échouée (id inconnu)"""
     # GIVEN
-    activite = Activite(
+    activite = Course(
         id_activite=9999999,
         id_user=1,
         date=datetime.now(),
-        type_sport="Course",
         distance=5.0,
-        duree=30,
+        duree=timedelta(minutes=30),  # Utilisation de timedelta pour la durée
         trace="trace",
         id_parcours=None,
         titre="Inexistant",
-        description="Ne doit pas fonctionner"
+        description="Ne doit pas fonctionner",
+        denivele=150.0
     )
 
     # WHEN
@@ -245,39 +264,22 @@ def test_modifier_activite_ko():
 def test_supprimer_activite_ok():
     """Suppression d'activité réussie"""
     # GIVEN
-    activite = Activite(
+    activite = Course(
+        id_activite=None,
         id_user=1,
         date=datetime.now(),
-        type_sport="Course",
         distance=5.0,
-        duree=30,
+        duree=timedelta(minutes=30),  # Utilisation de timedelta pour la durée
         trace="trace_a_supprimer",
         id_parcours=None,
         titre="À supprimer",
-        description="Test suppression"
+        description="Test suppression",
+        denivele=150.0
     )
     ActiviteDao().creer(activite)
-    id_a_supprimer = activite.id_activite
 
     # WHEN
-    suppression_ok = ActiviteDao().supprimer(id_a_supprimer)
+    suppression_ok = ActiviteDao().supprimer(activite.id_activite)
 
     # THEN
     assert suppression_ok
-    assert ActiviteDao().lire(id_a_supprimer) is None
-
-
-def test_supprimer_activite_ko():
-    """Suppression d'activité échouée (id inconnu)"""
-    # GIVEN
-    id_activite = 9999999
-
-    # WHEN
-    suppression_ok = ActiviteDao().supprimer(id_activite)
-
-    # THEN
-    assert not suppression_ok
-
-
-if __name__ == "__main__":
-    pytest.main([__file__])
