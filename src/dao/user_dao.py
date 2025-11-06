@@ -235,4 +235,35 @@ class UserDao(metaclass=Singleton):
 
         return res == 1
 
-    
+    def lister_followed(self, user: User) -> list[User]:
+        """Liste les utilisateurs que l'utilisateur suit (followed)"""
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        SELECT u.*
+                        FROM app.follow f
+                        JOIN app.users u ON u.id_user = f.id_followed
+                        WHERE f.id_follower = %(id_user)s;
+                        """,
+                        {"id_user": user.id_user}
+                    )
+                    resultats = cursor.fetchall()
+                    return [
+                        User(
+                            id_user=r["id_user"],
+                            prenom=r["prenom"],
+                            nom=r["nom"],
+                            username=r["username"],
+                            mot_de_passe=r["mot_de_passe"],
+                            created_at=r["created_at"]
+                        )
+                        for r in resultats
+                    ]
+        except Exception as e:
+            logging.error(f"Erreur lors de la récupération des followed : {e}")
+            return []
+
+
+        

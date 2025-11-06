@@ -184,5 +184,10 @@ ALTER TABLE app.parcours
     -- Modifier la colonne id_activite pour qu'elle ne soit pas obligatoire
     ALTER COLUMN id_activite DROP NOT NULL;
 
+ALTER TABLE app.parcours
+ALTER COLUMN depart DROP NOT NULL,
+ALTER COLUMN arrivee DROP NOT NULL;
+
+
 
 

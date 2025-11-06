@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from datetime import date
-from services.statistique_service import StatistiqueService
+from service.Statistique_service import StatistiqueService
 from business_object.user import User
 
 statistiques_router = APIRouter(
