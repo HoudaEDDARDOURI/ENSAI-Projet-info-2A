@@ -46,12 +46,19 @@ def test_creer_activite_in_db(activite_service):
     assert isinstance(activite, Course)
     assert activite.titre == titre
 
-    # Vérification en base
-    activite_recuperee = activite_service.activiteDao.lire(activite.id_activite)
-    print(activite_recuperee.id_activite)
+    # Vérification en base via lire_activites_par_user
+    activites_utilisateur = activite_service.activiteDao.lire_activites_par_user(id_user)
+    activite_recuperee = next(
+        (a for a in activites_utilisateur if a.id_activite == activite.id_activite),
+        None
+    )
+
+    print(activite_recuperee.id_activite if activite_recuperee else "Non trouvé")
     print(activite_recuperee)
+
     assert activite_recuperee is not None
     assert activite_recuperee.titre == titre
+
 
 
 def test_supprimer_activite(activite_service):
@@ -88,14 +95,22 @@ def test_supprimer_activite(activite_service):
     assert resultat is True
 
     # 3️⃣ Vérifier qu'elle n'existe plus en base
-    activite_recuperee = activite_service.activiteDao.lire(activite.id_activite)
+    activites_utilisateur = activite_service.activiteDao.lire_activites_par_user(id_user)
+    activite_recuperee = next(
+        (a for a in activites_utilisateur if a.id_activite == activite.id_activite),
+        None
+    )
     assert activite_recuperee is None
 
 
+
 def test_afficher_toutes_activites(activite_service, capsys):
-    """Test d'intégration : vérifier l'affichage de toutes les activités"""
-    
-    # Créer une activité de test si nécessaire
+    """Test d'intégration : vérifier l'affichage de toutes les activités d'un utilisateur"""
+
+    # ID de l'utilisateur pour le test
+    id_user = 1
+
+    # Créer une activité de test
     date_activite = date(2025, 11, 5)
     activite = activite_service.creer_activite(
         date_activite,
@@ -105,13 +120,28 @@ def test_afficher_toutes_activites(activite_service, capsys):
         "trace_affichage.gpx",
         "Activite affichage",
         "Description affichage",
-        1,
-        1
+        id_user,  # id_user
+        1         # id_parcours
     )
     assert activite is not None
 
-    # Appel de la méthode à tester
-    activite_service.afficher_toutes_activites()
+    # Appel de la fonction à tester
+    # On capture la sortie pour vérifier l'affichage
+    import sys
+    from io import StringIO
+
+    captured_output = StringIO()
+    sys.stdout = captured_output  # redirige stdout
+
+    activite_service.afficher_toutes_activites(id_user)
+
+    sys.stdout = sys.__stdout__  # rétablit stdout
+    output = captured_output.getvalue()
+
+    # Vérifier que la sortie contient le titre et la description
+    assert "Activite affichage" in output
+    assert "Description affichage" in output
+
 
 
 def test_modifier_activite(activite_service):
@@ -135,15 +165,18 @@ def test_modifier_activite(activite_service):
 
     assert activite is not None
 
-    #  Modifier certains attributs
+    # Modifier certains attributs
     activite.titre = "Titre modifié"
     activite.description = "Description modifiée"
 
+    # Appel de la méthode modifier
     resultat = activite_service.modifier_activite(activite)
     assert resultat is True
 
-    #  Vérifier les modifications en base
-    activite_modifiee = activite_service.activiteDao.lire(activite.id_activite)
+    # Vérifier les modifications en base via lire_activites_par_user
+    activites = activite_service.activiteDao.lire_activites_par_user(id_user)
+    activite_modifiee = next((a for a in activites if a.id_activite == activite.id_activite), None)
+
     assert activite_modifiee is not None
     assert activite_modifiee.titre == "Titre modifié"
     assert activite_modifiee.description == "Description modifiée"
@@ -161,18 +194,18 @@ def test_get_likes_activite(activite_service):
     id_user = 1
     id_parcours = 1
 
-    #  Créer l'activité
+    # Créer l'activité
     activite = activite_service.creer_activite(
         date_activite, type_sport, distance, duree,
         trace, titre, description, id_user, id_parcours
     )
     assert activite is not None
 
-    #  Ajouter un like via le DAO
+    # Ajouter un like via le DAO
     like = Like(id_user=id_user, id_activite=activite.id_activite)
-    activite_service.likeDao.creer(like)
+    activite_service.likeDao.creer(like)  # Assure-toi que la méthode existe
 
-    #  Vérifier avec la méthode du service
+    # Vérifier avec la méthode du service
     likes = activite_service.get_likes_activite(activite.id_activite)
     assert len(likes) > 0
-    assert any(like_obj.id_user == id_user for like_obj in likes)
+    assert any(l.id_user == id_user for l in likes)

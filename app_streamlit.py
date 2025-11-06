@@ -120,7 +120,7 @@ if st.session_state.auth:
                 try:
                     activites_resp = requests.get(f"{API_URL}/activites/", auth=auth)
                     if activites_resp.status_code == 200:
-                        activites = activites_resp.json()
+                        activites = activites_resp.json() 
                         
                         if len(activites) == 0:
                             st.info("🏃 Aucune activité enregistrée. Créez-en une dans l'onglet 'Nouvelle Activité' !")

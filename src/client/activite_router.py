@@ -35,3 +35,4 @@ def get_user_activites(current_user = Depends(get_current_user)):
     """Récupérer toutes les activités de l'utilisateur connecté"""
     # Retourne uniquement les activités de l'utilisateur connecté
     return activite_service.afficher_toutes_activites(current_user.id_user)
+    
