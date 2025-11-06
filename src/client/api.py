@@ -4,7 +4,7 @@ from client.activite_router import activite_router
 
 
 # Création de l'application FastAPI
-app = FastAPI(title="Sport Activities API", root_path="/proxy/8000")
+app = FastAPI(title="Sport Activities API")
 
 # Inclusion des routers
 app.include_router(user_router)
