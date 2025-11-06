@@ -48,11 +48,31 @@ class UserService:
         """Retourne un utilisateur selon son identifiant."""
         return self.userdao.lire(id_user)
 
-    def modifier_user(self, user: User) -> bool:
-        """Met à jour les informations d'un utilisateur."""
+    def modifier_user(self, user: User, nouveau_mot_de_passe: str | None = None) -> bool:
+        """
+        Met à jour les informations d'un utilisateur.
+        Si un nouveau mot de passe est fourni, il sera hashé avant la mise à jour.
+
+        Parameters
+        ----------
+        user : User
+            L'utilisateur à modifier (doit déjà avoir son id_user)
+        nouveau_mot_de_passe : str | None
+            Le nouveau mot de passe en clair, s'il doit être changé
+
+        Returns
+        -------
+        success : bool
+            True si la modification a réussi, False sinon
+        """
         if not user.id_user:
             print("Impossible de modifier : l'utilisateur n'a pas d'ID.")
             return False
+
+        # Hash du mot de passe si un nouveau est fourni
+        if nouveau_mot_de_passe:
+            user.mot_de_passe = hash_password(nouveau_mot_de_passe)
+
         return self.userdao.modifier(user)
 
     def lister_followers(self, user: User):

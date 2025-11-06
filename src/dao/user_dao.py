@@ -4,6 +4,7 @@ import logging
 from dao.db_connection import DBConnection
 from utils.singleton import Singleton
 from business_object.user import User
+from psycopg import errors
 
 load_dotenv()  # charge les variables depuis le fichier .env
 host = os.environ['POSTGRES_HOST']
@@ -34,8 +35,12 @@ class UserDao(metaclass=Singleton):
                         },
                     )
                     res = cursor.fetchone()
-        except Exception as e:
-            logging.error(f"Erreur lors de la création d'un utilisateur : {e}")
+        except errors.UniqueViolation as e:
+            logging.error(f"Erreur : username déjà utilisé : {e}")
+            return False
+        except errors.Error as e:
+            logging.error(f"Erreur base de données SQL : {e}")
+            return False
 
         if res:
             user.id_user = res["id_user"]
@@ -80,30 +85,41 @@ class UserDao(metaclass=Singleton):
             logging.error(f"Erreur lors de la suppression de l'utilisateur {id_user} : {e}")
             return False
 
-    def se_connecter(self, username: str, mot_de_passe: str) -> User | None:
+    def se_connecter(self, username: str, mot_de_passe: str) -> tuple[User | None, str]:
         try:
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        """
-                        SELECT * FROM users
-                        WHERE username = %(username)s AND mot_de_passe = %(mot_de_passe)s;
-                        """,
-                        {"username": username, "mot_de_passe": mot_de_passe}
+                        "SELECT * FROM users WHERE username = %(username)s;",
+                        {"username": username}
                     )
                     res = cursor.fetchone()
-                    if res:
-                        return User(
-                            id_user=res["id_user"],
-                            prenom=res["prenom"],
-                            nom=res["nom"],
-                            username=res["username"],
-                            mot_de_passe=res["mot_de_passe"],
-                            created_at=res["created_at"],
-                        )
+                    if not res:
+                        return None, "Utilisateur non trouvé"
+                    
+                    # Vérifier le mot de passe
+                    from utils.securite import verify_password
+                    if not verify_password(mot_de_passe, res["mot_de_passe"]):
+                        return None, "Mot de passe incorrect"
+
+                    # Tout est OK
+                    user = User(
+                        id_user=res["id_user"],
+                        prenom=res["prenom"],
+                        nom=res["nom"],
+                        username=res["username"],
+                        mot_de_passe=res["mot_de_passe"],
+                        created_at=res["created_at"],
+                    )
+                    return user, "Connexion réussie"
+
+        except errors.ConnectionException:
+            return None, "Erreur de connexion à la base de données"
+        except errors.Error as e:
+            return None, f"Erreur SQL : {e}"
         except Exception as e:
-            logging.error(f"Erreur lors de la connexion du user : {e}")
-        return None
+            return None, f"Erreur inattendue : {e}"
+
 
     def trouver_par_username(self, username: str) -> User | None:
         try:
