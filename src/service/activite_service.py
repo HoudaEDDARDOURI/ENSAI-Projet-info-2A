@@ -65,27 +65,19 @@ class ActiviteService:
         return nouvelle_activite if self.activiteDao.creer(nouvelle_activite) else None
     # afficher all activities 
 
-    def afficher_toutes_activites(self, id_user: int):
-        """Affiche toutes les activités d'un utilisateur en utilisant la méthode
-         'lire_activites_par_user' du DAO.
+    def get_toutes_activites(self, id_user: int) -> list:
+        """
+        Récupère toutes les activités d'un utilisateur.
+        Retourne toujours une liste (vide si aucune activité).
         """
         try:
-            # Récupérer toutes les activités de l'utilisateur
             activites = self.activiteDao.lire_activites_par_user(id_user)
-
-            if not activites:
-                print("Aucune activité trouvée pour cet utilisateur.")
-                return
-
-            # Afficher chaque activité
-            for activite in activites:
-                activite.afficher_details()
-
+            return activites or []  # Toujours retourner une liste
         except Exception as e:
-            logging.exception(f"Erreur lors de l'affichage des activités : {e}")
+            logging.exception(f"Erreur lors de la récupération des activités : {e}")
+            return []
 
     # modifier activite 
-
     def modifier_activite(self, activite: Activite) -> bool:
         """
         Modifie une activité existante.
