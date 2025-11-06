@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 API_URL = "http://127.0.0.1:8000"
 
@@ -14,11 +14,11 @@ def statistiques_page():
 
     # Infos user disponibles
     user_info = st.session_state.get('user')
-    if not user_info or 'idUser' not in user_info:
+    if not user_info or 'id_user' not in user_info:
         st.error("Impossible de récupérer les informations utilisateur.")
         return
 
-    user_id = user_info['idUser']
+    user_id = user_info['id_user']
 
     # Sélection de Période
 

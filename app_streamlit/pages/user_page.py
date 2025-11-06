@@ -14,11 +14,12 @@ def users_page():
 
         if resp.status_code == 200:
             user = resp.json()
+            # Stockage des infos user dans la session pour accès par d'autres pages (Statistiques)
+            st.session_state.user = user
 
             st.success(f"Connecté : {user['prenom']} {user['nom']}")
             st.write(f"@{user['username']}")
 
-            # ✅ On utilise followers_count / followed_count renvoyés par l’API
             st.write(f"👥 Followers : **{user['followers_count']}**")
             st.write(f"➡️ Suivis : **{user['followed_count']}**")
 
@@ -31,7 +32,6 @@ def users_page():
                 suggestions = suggestions_resp.json()
 
                 for s in suggestions:
-                    # ✅ Le backend renvoie bien id_user ici (car on retourne l’objet User)
                     col1, col2 = st.columns([3, 1])
 
                     with col1:
@@ -54,11 +54,14 @@ def users_page():
             # Bouton déconnexion
             if st.button("Se déconnecter"):
                 st.session_state.auth = None
+                st.session_state.user = None
                 st.rerun()
             return
 
         else:
             st.error("Erreur d'authentification")
+            st.session_state.auth = None
+            st.session_state.user = None
             return
 
     # -------------------------
@@ -72,7 +75,10 @@ def users_page():
         if st.button("Connexion"):
             resp = requests.get(f"{API_URL}/users/me", auth=(username, password))
             if resp.status_code == 200:
+                user_data = resp.json()
                 st.session_state.auth = (username, password)
+                # Stockage des infos user après la connexion
+                st.session_state.user = user_data 
                 st.success("Connexion réussie ✅")
                 st.rerun()
             else:
