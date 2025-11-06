@@ -4,7 +4,7 @@ from business_object.activite import Activite
 
 class Natation(Activite):
     def __init__(self, id_activite: int, id_user: int, date: date, distance: float,
-                 duree: timedelta, trace: str, id_parcours: int,
+                 duree: timedelta, trace: str,
                  titre: str, description: str, denivele: float = 0.0):
         super().__init__(id_activite=id_activite,
                          id_user=id_user,
@@ -13,7 +13,6 @@ class Natation(Activite):
                          distance=distance,
                          duree=duree,
                          trace=trace,
-                         id_parcours=id_parcours,
                          titre=titre,
                          description=description)
         self.denivele = denivele

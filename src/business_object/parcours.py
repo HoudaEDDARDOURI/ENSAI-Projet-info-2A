@@ -15,10 +15,9 @@ class Parcours:
     - idUser: INTEGER (int)
     """
     def __init__(self, depart: str, arrivee: str,
-                 id_activite: Optional[int], user: User, id_parcours: int = None):
+                 id_activite: Optional[int], id_user: int, id_parcours: int = None):
         self.id_parcours = id_parcours
         self.depart = depart
         self.arrivee = arrivee
         self.id_activite = id_activite  # Peut être None si aucune activité associée
-        self.user = user
-
+        self.id_user = id_user
