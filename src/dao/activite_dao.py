@@ -6,6 +6,7 @@ from business_object.course import Course
 from business_object.natation import Natation
 from business_object.cyclisme import Cyclisme
 from utils.singleton import Singleton
+from typing import List
 
 
 class ActiviteDao(metaclass=Singleton):
@@ -56,81 +57,81 @@ class ActiviteDao(metaclass=Singleton):
         return created
 
     def lire_activites_par_user(self, id_user: int) -> List[Activite]:
-    """Récupère toutes les activités d'un utilisateur par son ID."""
-    activites: List[Activite] = []
+        """Récupère toutes les activités d'un utilisateur par son ID."""
+        activites: List[Activite] = []
 
-    try:
-        with DBConnection().connection as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    SELECT *
-                    FROM activite
-                    WHERE id_user = %(id_user)s
-                    ORDER BY date_activite DESC;
-                    """,
-                    {"id_user": id_user},
-                )
-                results = cursor.fetchall()
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        SELECT *
+                        FROM activite
+                        WHERE id_user = %(id_user)s
+                        ORDER BY date_activite DESC;
+                        """,
+                        {"id_user": id_user},
+                    )
+                    results = cursor.fetchall()
 
-                for res in results:
-                    type_sport = res["type_sport"].lower()
+                    for res in results:
+                        type_sport = res["type_sport"].lower()
 
-                    # Sélectionner la sous-classe en fonction du type de sport
-                    if type_sport == "course":
-                        activites.append(
-                            Course(
-                                id_activite=res["id_activite"],
-                                id_user=res["id_user"],
-                                date=res["date_activite"],
-                                distance=res["distance"],
-                                duree=res["duree"],
-                                trace=res["trace"],
-                                id_parcours=res["id_parcours"],
-                                titre=res["titre"],
-                                description=res["description"],
-                                denivele=res.get("denivele", 0.0)
+                        # Sélectionner la sous-classe en fonction du type de sport
+                        if type_sport == "course":
+                            activites.append(
+                                Course(
+                                    id_activite=res["id_activite"],
+                                    id_user=res["id_user"],
+                                    date=res["date_activite"],
+                                    distance=res["distance"],
+                                    duree=res["duree"],
+                                    trace=res["trace"],
+                                    id_parcours=res["id_parcours"],
+                                    titre=res["titre"],
+                                    description=res["description"],
+                                    denivele=res.get("denivele", 0.0)
+                                )
                             )
-                        )
-                    elif type_sport == "cyclisme":
-                        activites.append(
-                            Cyclisme(
-                                id_activite=res["id_activite"],
-                                id_user=res["id_user"],
-                                date=res["date_activite"],
-                                distance=res["distance"],
-                                duree=res["duree"],
-                                trace=res["trace"],
-                                id_parcours=res["id_parcours"],
-                                titre=res["titre"],
-                                description=res["description"],
-                                denivele=res.get("denivele", 0.0)
+                        elif type_sport == "cyclisme":
+                            activites.append(
+                                Cyclisme(
+                                    id_activite=res["id_activite"],
+                                    id_user=res["id_user"],
+                                    date=res["date_activite"],
+                                    distance=res["distance"],
+                                    duree=res["duree"],
+                                    trace=res["trace"],
+                                    id_parcours=res["id_parcours"],
+                                    titre=res["titre"],
+                                    description=res["description"],
+                                    denivele=res.get("denivele", 0.0)
+                                )
                             )
-                        )
-                    elif type_sport == "natation":
-                        activites.append(
-                            Natation(
-                                id_activite=res["id_activite"],
-                                id_user=res["id_user"],
-                                date=res["date_activite"],
-                                distance=res["distance"],
-                                duree=res["duree"],
-                                trace=res["trace"],
-                                id_parcours=res["id_parcours"],
-                                titre=res["titre"],
-                                description=res["description"],
-                                denivele=res.get("denivele", 0.0)
+                        elif type_sport == "natation":
+                            activites.append(
+                                Natation(
+                                    id_activite=res["id_activite"],
+                                    id_user=res["id_user"],
+                                    date=res["date_activite"],
+                                    distance=res["distance"],
+                                    duree=res["duree"],
+                                    trace=res["trace"],
+                                    id_parcours=res["id_parcours"],
+                                    titre=res["titre"],
+                                    description=res["description"],
+                                    denivele=res.get("denivele", 0.0)
+                                )
                             )
-                        )
-                    else:
-                        logging.warning(f"Type d'activité inconnu : {type_sport}")
+                        else:
+                            logging.warning(f"Type d'activité inconnu : {type_sport}")
 
-    except psycopg2.Error as e:
-        logging.error(f"Erreur SQL : {e.pgerror}")
-    except Exception:
-        logging.exception("Erreur inattendue lors de la lecture des activités")
+        except psycopg2.Error as e:
+            logging.error(f"Erreur SQL : {e.pgerror}")
+        except Exception:
+            logging.exception("Erreur inattendue lors de la lecture des activités")
 
-    return activites
+        return activites
 
 
     def modifier(self, activite: Activite) -> bool:

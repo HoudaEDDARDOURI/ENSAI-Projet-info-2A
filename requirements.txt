@@ -11,3 +11,4 @@ requests
 tabulate
 uvicorn
 python-multipart
+argon2-cffi
