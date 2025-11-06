@@ -55,52 +55,31 @@ class ActiviteDao(metaclass=Singleton):
 
         return created
 
-    def lire(self, id_activite: int) -> Activite | None:
-        """Récupère une activité par son identifiant."""
-        try:
-            with DBConnection().connection as connection:
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        """
-                        SELECT *
-                        FROM activite
-                        WHERE id_activite = %(id)s;
-                        """,
-                        {"id": id_activite},
-                    )
-                    res = cursor.fetchone()
-                    if res:
-                        type_sport = res["type_sport"].lower()
+    def lire_activites_par_user(self, id_user: int) -> List[Activite]:
+    """Récupère toutes les activités d'un utilisateur par son ID."""
+    activites: List[Activite] = []
 
-                        # Si c'est une activité de type "course" ou "cyclisme"
-                        if type_sport == "course":
-                            return Course(  # Utiliser la sous-classe appropriée
-                                id_activite=res["id_activite"],
-                                id_user=res["id_user"],
-                                date=res["date_activite"],
-                                distance=res["distance"],
-                                duree=res["duree"],
-                                trace=res["trace"],
-                                id_parcours=res["id_parcours"],
-                                titre=res["titre"],
-                                description=res["description"],
-                                denivele=res.get("denivele", 0.0)  # Le dénivelé est optionnel
-                            )
-                        elif type_sport == "cyclisme":
-                            return Cyclisme(  # Instancier Cyclisme
-                                id_activite=res["id_activite"],
-                                id_user=res["id_user"],
-                                date=res["date_activite"],
-                                distance=res["distance"],
-                                duree=res["duree"],
-                                trace=res["trace"],
-                                id_parcours=res["id_parcours"],
-                                titre=res["titre"],
-                                description=res["description"],
-                                denivele=res.get("denivele", 0.0)  # Le dénivelé est optionnel
-                            )
-                        elif type_sport == "natation":
-                            return Natation(  # Utiliser la sous-classe appropriée
+    try:
+        with DBConnection().connection as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT *
+                    FROM activite
+                    WHERE id_user = %(id_user)s
+                    ORDER BY date_activite DESC;
+                    """,
+                    {"id_user": id_user},
+                )
+                results = cursor.fetchall()
+
+                for res in results:
+                    type_sport = res["type_sport"].lower()
+
+                    # Sélectionner la sous-classe en fonction du type de sport
+                    if type_sport == "course":
+                        activites.append(
+                            Course(
                                 id_activite=res["id_activite"],
                                 id_user=res["id_user"],
                                 date=res["date_activite"],
@@ -112,15 +91,46 @@ class ActiviteDao(metaclass=Singleton):
                                 description=res["description"],
                                 denivele=res.get("denivele", 0.0)
                             )
-                        else:
-                            logging.warning(f"Type d'activité inconnu : {type_sport}")
+                        )
+                    elif type_sport == "cyclisme":
+                        activites.append(
+                            Cyclisme(
+                                id_activite=res["id_activite"],
+                                id_user=res["id_user"],
+                                date=res["date_activite"],
+                                distance=res["distance"],
+                                duree=res["duree"],
+                                trace=res["trace"],
+                                id_parcours=res["id_parcours"],
+                                titre=res["titre"],
+                                description=res["description"],
+                                denivele=res.get("denivele", 0.0)
+                            )
+                        )
+                    elif type_sport == "natation":
+                        activites.append(
+                            Natation(
+                                id_activite=res["id_activite"],
+                                id_user=res["id_user"],
+                                date=res["date_activite"],
+                                distance=res["distance"],
+                                duree=res["duree"],
+                                trace=res["trace"],
+                                id_parcours=res["id_parcours"],
+                                titre=res["titre"],
+                                description=res["description"],
+                                denivele=res.get("denivele", 0.0)
+                            )
+                        )
+                    else:
+                        logging.warning(f"Type d'activité inconnu : {type_sport}")
 
-        except psycopg2.Error as e:
-            logging.error(f"Erreur SQL : {e.pgerror}")
-        except Exception:
-            logging.exception("Erreur inattendue lors de la lecture de l'activité")
-        
-        return None
+    except psycopg2.Error as e:
+        logging.error(f"Erreur SQL : {e.pgerror}")
+    except Exception:
+        logging.exception("Erreur inattendue lors de la lecture des activités")
+
+    return activites
 
 
     def modifier(self, activite: Activite) -> bool:
