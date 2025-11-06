@@ -1,2 +1,2 @@
-def activites_page():
+def feed_page():
     pass

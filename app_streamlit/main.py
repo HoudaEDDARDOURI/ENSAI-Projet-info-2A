@@ -11,7 +11,7 @@ if "auth" not in st.session_state:
     st.session_state.auth = None
 
 st.sidebar.title("Menu")
-page = st.sidebar.radio("Navigation", ["Utilisateurs", "Activités"])
+page = st.sidebar.radio("Navigation", ["Utilisateurs", "Activités", "Statistiques, "])
 
 if page == "Utilisateurs":
     users_page()
