@@ -5,7 +5,6 @@ from business_object.cyclisme import Cyclisme
 from dao.activite_dao import ActiviteDao
 from dao.commentaire_dao import CommentaireDao
 from dao.like_dao import LikeDao
-from dao.db_connection import DBConnection
 import logging
 
 
@@ -66,29 +65,24 @@ class ActiviteService:
         return nouvelle_activite if self.activiteDao.creer(nouvelle_activite) else None
     # afficher all activities 
 
-    def afficher_toutes_activites(self):
-        """
-        Affiche toutes les activités en utilisant la méthode 'lire' du DAO.
+    def afficher_toutes_activites(self, id_user: int):
+        """Affiche toutes les activités d'un utilisateur en utilisant la méthode
+         'lire_activites_par_user' du DAO.
         """
         try:
-            # Étape 1 : récupérer tous les IDs
-            with DBConnection().connection as connection:
-                with connection.cursor() as cursor:
-                    cursor.execute("SELECT id_activite FROM activite;")
-                    ids = [row["id_activite"] for row in cursor.fetchall()]
+            # Récupérer toutes les activités de l'utilisateur
+            activites = self.activiteDao.lire_activites_par_user(id_user)
 
-            if not ids:
-                print("Aucune activité trouvée.")
+            if not activites:
+                print("Aucune activité trouvée pour cet utilisateur.")
                 return
 
-            # Étape 2 et 3 : récupérer chaque activité et l'afficher
-            for id_activite in ids:
-                activite = self.activiteDao.lire(id_activite)
-                if activite:
-                    activite.afficher_details()
-    
+            # Afficher chaque activité
+            for activite in activites:
+                activite.afficher_details()
+
         except Exception as e:
-            logging.exception(f"Erreur lors de l'affichage de toutes les activités: {e}")
+            logging.exception(f"Erreur lors de l'affichage des activités : {e}")
 
     # modifier activite 
 

@@ -1,5 +1,5 @@
 coverage
-inquirerPy
+InquirerPy
 fastapi
 psycopg2-binary
 pylint
@@ -12,3 +12,5 @@ tabulate
 uvicorn
 python-multipart
 argon2-cffi
+streamlit
+gpxpy
