@@ -77,7 +77,10 @@ class UserService:
 
     def lister_followers(self, user: User):
         """Liste les followers de l'utilisateur"""
-        return self.dao.lister_followers(user)
+        return self.userdao.lister_followers(user)
+
+    def lister_followed(self, user: User) -> list[User]:
+        return self.userdao.lister_followed(user)
 
     def get_user_par_username(self, username: str):
         """Récupère l'utilisateur par son username"""

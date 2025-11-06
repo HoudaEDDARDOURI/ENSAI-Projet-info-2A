@@ -16,7 +16,7 @@ page = st.sidebar.radio("Navigation", ["Utilisateurs", "Activités", "Statistiqu
 if page == "Utilisateurs":
     users_page()
 elif page == "Statistiques":
-    statistique_page()
+    statistiques_page()
 elif page == "Activités":
     activites_page()
 else:

@@ -34,13 +34,24 @@ def create_user(
 
 @user_router.get("/me")
 def lire_user_courant(current_user: User = Depends(get_current_user)):
-    """Récupérer les informations de l'utilisateur connecté"""
+    """Récupérer les informations de l'utilisateur connecté avec nombre de followers"""
+    
+    # Nombre de followers
+    followers = user_service.lister_followers(current_user)
+    followers_count = len(followers)
+    
+    # Nombre de suivis (followed) — si tu as une fonction similaire à lister_followers
+    followed_count = len(user_service.lister_followed(current_user))  # à créer si nécessaire
+
     return {
         "id": current_user.id_user,
         "username": current_user.username,
         "nom": current_user.nom,
-        "prenom": current_user.prenom
+        "prenom": current_user.prenom,
+        "followers_count": followers_count,
+        "followed_count": followed_count
     }
+
 
 @user_router.put("/me")
 def modifier_user_api(
