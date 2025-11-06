@@ -136,7 +136,7 @@ class StatistiqueService():
         """
         Calcule un coefficient de progression adaptatif selon la tendance.
 
-        Args:
+        Parameters:
             activites (list): Liste des activités récentes
 
         Returns:
@@ -159,7 +159,7 @@ class StatistiqueService():
         """
         Calcule la tendance de progression (positif = amélioration).
 
-        Args:
+        Parameters:
             activites (list): Liste de 3 activités minimum
 
         Returns:
@@ -181,7 +181,7 @@ class StatistiqueService():
         """
         Retourne une distance de démarrage par défaut selon le sport.
 
-        Args:
+        Parameters:
             type_sport (str): Type de sport
 
         Returns:
@@ -196,9 +196,9 @@ class StatistiqueService():
 
     def _arrondir_distance(self, distance, type_sport):
         """
-        Arrondit la distance de manière lisible selon le sport.
+        Arrondit la distance selon le sport.
 
-        Args:
+        Parameters:
             distance (float): Distance brute
             type_sport (str): Type de sport
 
@@ -206,11 +206,11 @@ class StatistiqueService():
             float: Distance arrondie
         """
         if type_sport.lower() == 'natation':
-            # Arrondir à 50m près pour la natation
-            return round(distance * 20) / 20  # 0.05 km = 50m
+            # Arrondir à 50m près
+            return round(distance * 20) / 20
         elif type_sport.lower() == 'cyclisme':
-            # Arrondir au km près pour le cyclisme
+            # Arrondir au km près
             return round(distance)
         else:
-            # Arrondir à 0.5 km près pour la course
+            # Arrondir à 0.5 km près
             return round(distance * 2) / 2
