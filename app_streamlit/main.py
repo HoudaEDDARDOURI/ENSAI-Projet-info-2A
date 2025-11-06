@@ -1,6 +1,9 @@
 import streamlit as st
 from pages.user_page import users_page
 from pages.activite_page import activites_page
+from pages.statistique_page import statistique_page
+from pages.feed_page import feed_page
+
 
 st.set_page_config(page_title="Sport App", layout="wide")
 
@@ -12,5 +15,9 @@ page = st.sidebar.radio("Navigation", ["Utilisateurs", "Activités"])
 
 if page == "Utilisateurs":
     users_page()
-else:
+elif page == "Statistiques":
+    statistique_page()
+elif page == "Activités":
     activites_page()
+else:
+    feed_page()
