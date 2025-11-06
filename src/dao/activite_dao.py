@@ -24,11 +24,11 @@ class ActiviteDao(metaclass=Singleton):
                     cursor.execute(
                         """
                         INSERT INTO activite(
-                            id_user, date_activite, type_sport, distance, duree, trace, id_parcours,
+                            id_user, date_activite, type_sport, distance, duree, trace,
                             titre, description, denivele
                         ) VALUES (
                             %(id_user)s, %(date_activite)s, %(type_sport)s, %(distance)s, %(duree)s,
-                            %(trace)s, %(id_parcours)s, %(titre)s, %(description)s, %(denivele)s
+                            %(trace)s, %(titre)s, %(description)s, %(denivele)s
                         )
                         RETURNING id_activite;
                         """,
@@ -39,7 +39,6 @@ class ActiviteDao(metaclass=Singleton):
                             "distance": activite.distance,
                             "duree": activite.duree,
                             "trace": activite.trace,
-                            "id_parcours": activite.id_parcours,
                             "titre": activite.titre,
                             "description": activite.description,
                             "denivele": activite.denivele if hasattr(activite, 'denivele') else 0.0
@@ -57,6 +56,73 @@ class ActiviteDao(metaclass=Singleton):
             created = True
 
         return created
+    def lire(self, id_activite: int) -> Activite:
+        """Récupère une activité par son ID."""
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        SELECT *
+                        FROM activite
+                        WHERE id_activite = %(id_activite)s;
+                        """,
+                        {"id_activite": id_activite},
+                    )
+                    result = cursor.fetchone()
+
+                    if result:
+                        type_sport = result["type_sport"].lower()
+
+                        # Sélectionner la sous-classe en fonction du type de sport
+                        if type_sport == "course":
+                            return Course(
+                                id_activite=result["id_activite"],
+                                id_user=result["id_user"],
+                                date=result["date_activite"],
+                                distance=result["distance"],
+                                duree=result["duree"],
+                                trace=result["trace"],
+                                titre=result["titre"],
+                                description=result["description"],
+                                denivele=result.get("denivele", 0.0)
+                            )
+                        elif type_sport == "cyclisme":
+                            return Cyclisme(
+                                id_activite=result["id_activite"],
+                                id_user=result["id_user"],
+                                date=result["date_activite"],
+                                distance=result["distance"],
+                                duree=result["duree"],
+                                trace=result["trace"],
+                                titre=result["titre"],
+                                description=result["description"],
+                                denivele=result.get("denivele", 0.0)
+                            )
+                        elif type_sport == "natation":
+                            return Natation(
+                                id_activite=result["id_activite"],
+                                id_user=result["id_user"],
+                                date=result["date_activite"],
+                                distance=result["distance"],
+                                duree=result["duree"],
+                                trace=result["trace"],
+                                titre=result["titre"],
+                                description=result["description"],
+                                denivele=result.get("denivele", 0.0)
+                            )
+                        else:
+                            logging.warning(f"Type d'activité inconnu : {type_sport}")
+                            return None
+                    else:
+                        logging.warning(f"Aucune activité trouvée avec l'ID {id_activite}")
+                        return None
+
+        except psycopg2.Error as e:
+            logging.error(f"Erreur SQL : {e.pgerror}")
+        except Exception:
+            logging.exception("Erreur inattendue lors de la récupération de l'activité")
+        return None
 
     def lire_activites_par_user(self, id_user: int) -> List[Activite]:
         """Récupère toutes les activités d'un utilisateur par son ID."""
@@ -89,7 +155,6 @@ class ActiviteDao(metaclass=Singleton):
                                     distance=res["distance"],
                                     duree=res["duree"],
                                     trace=res["trace"],
-                                    id_parcours=res["id_parcours"],
                                     titre=res["titre"],
                                     description=res["description"],
                                     denivele=res.get("denivele", 0.0)
@@ -104,7 +169,6 @@ class ActiviteDao(metaclass=Singleton):
                                     distance=res["distance"],
                                     duree=res["duree"],
                                     trace=res["trace"],
-                                    id_parcours=res["id_parcours"],
                                     titre=res["titre"],
                                     description=res["description"],
                                     denivele=res.get("denivele", 0.0)
@@ -119,7 +183,6 @@ class ActiviteDao(metaclass=Singleton):
                                     distance=res["distance"],
                                     duree=res["duree"],
                                     trace=res["trace"],
-                                    id_parcours=res["id_parcours"],
                                     titre=res["titre"],
                                     description=res["description"],
                                     denivele=res.get("denivele", 0.0)
@@ -151,7 +214,6 @@ class ActiviteDao(metaclass=Singleton):
                             distance = %(distance)s,
                             duree = %(duree)s,
                             trace = %(trace)s,
-                            id_parcours = %(id_parcours)s,
                             titre = %(titre)s,
                             description = %(description)s
                     """
@@ -161,7 +223,6 @@ class ActiviteDao(metaclass=Singleton):
                         "distance": activite.distance,
                         "duree": activite.duree,
                         "trace": activite.trace,
-                        "id_parcours": activite.id_parcours,
                         "titre": activite.titre,
                         "description": activite.description,
                     }

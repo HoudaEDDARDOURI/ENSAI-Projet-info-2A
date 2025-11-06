@@ -21,6 +21,12 @@ class ParcoursService:
         self.parcours_dao = ParcoursDao()
         self.activite_dao = ActiviteDao()  
         self.user_dao = UserDao()
+    def creer_parcours(self, depart: str, arrivee: str, id_activite: int | None, id_user: int) -> bool:
+        """
+        Crée un nouveau parcours en validant et en passant la responsabilité de la persistance au ParcoursDao.
+        """
+        parcours = Parcours(depart, arrivee, id_activite, id_user)
+        return self.parcours_dao.creer(parcours)
 
     def get_coordinates(self, parcours: Parcours) -> List[Tuple[float, float]]:
         """
@@ -120,5 +126,5 @@ class ParcoursService:
         file_path = f"parcours_{id_parcours}.html"
         map_.save(file_path)
 
-        return file_path  # Retourne le chemin du fichier HTML pour que l'utilisateur puisse le télécharger ou le visualiser
+        return file_path # Retourne à la fois le fichier et l'objet
 

@@ -30,7 +30,6 @@ class ActiviteService:
                 titre=titre,
                 description=description,
                 id_user=id_user,
-                id_parcours=id_parcours,
                 denivele=0.0
             )
         elif type_sport.lower() == "natation":
@@ -42,8 +41,7 @@ class ActiviteService:
                 trace=trace,
                 titre=titre,
                 description=description,
-                id_user=id_user,
-                id_parcours=id_parcours, 
+                id_user=id_user
             )
         elif type_sport.lower() == "cyclisme":
             nouvelle_activite = Cyclisme(
@@ -55,7 +53,6 @@ class ActiviteService:
                 titre=titre,
                 description=description,
                 id_user=id_user,
-                id_parcours=id_parcours,
                 denivele=0.0
             )
         else:
