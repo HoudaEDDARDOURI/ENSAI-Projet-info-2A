@@ -13,12 +13,11 @@ class User():
         self.mot_de_passe = mot_de_passe
         self.created_at = created_at
 
-
-        # self.photo = photo
+        self.activites = []
+        self.parcours = []
 
         self.following: set[int] = set()
         self.followers: set[int] = set()
-
 
     def suivre(self, autre_user: "User"):
         """Ajoute un utilisateur à la liste des suivis"""

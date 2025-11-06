@@ -170,6 +170,19 @@ CREATE TABLE IF NOT EXISTS test.natation (
     vitesse_minkm DECIMAL(4,2)
 );
 
+ALTER TABLE app.parcours
+    -- Supprimer les anciennes colonnes de latitude et longitude
+    DROP COLUMN depart_lat,
+    DROP COLUMN depart_lon,
+    DROP COLUMN arrivee_lat,
+    DROP COLUMN arrivee_lon;
+    
+    -- Ajouter les nouvelles colonnes de départ et arrivée sous forme de texte
+    ADD COLUMN depart TEXT NOT NULL,
+    ADD COLUMN arrivee TEXT NOT NULL;
+
+    -- Modifier la colonne id_activite pour qu'elle ne soit pas obligatoire
+    ALTER COLUMN id_activite DROP NOT NULL;
 
 
 
