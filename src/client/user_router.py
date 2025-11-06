@@ -4,6 +4,9 @@ from business_object.user import User
 from service.user_service import UserService
 from client.auth import get_current_user  # ← Import depuis auth.py
 
+
+
+
 user_service = UserService()
 
 user_router = APIRouter(
@@ -85,3 +88,25 @@ def supprimer_user(id_user: int, current_user: User = Depends(get_current_user))
     if not success:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
     return {"detail": "Utilisateur supprimé"}
+
+
+@user_router.get("/suggestions")
+def suggestions(current_user: User = Depends(get_current_user)):
+    """Renvoie les 10 premiers utilisateurs sauf soi-même"""
+    users = user_service.lister_tous_les_users()  # Tu as sûrement déjà une méthode similaire
+    users = [u for u in users if u.id_user != current_user.id_user]
+    return users[:10]
+
+
+@user_router.post("/{id}/follow")
+def suivre_user(id: int, current_user: User = Depends(get_current_user)):
+    autre_user = user_service.get_user_by_id(id)
+    if not autre_user:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+
+    try:
+        user_service.suivre(current_user, autre_user)
+        return {"message": "Suivi effectué ✅"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+

@@ -85,4 +85,9 @@ class UserService:
     def get_user_par_username(self, username: str):
         """Récupère l'utilisateur par son username"""
         return self.userdao.trouver_par_username(username)
+
+
+
+
+
         

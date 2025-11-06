@@ -4,67 +4,79 @@ import requests
 
 API_URL = "http://127.0.0.1:8000"
 
+
 def users_page():
     st.header("🔐 Gestion Utilisateur")
 
     # Si connecté
     if st.session_state.auth:
-        try:
-            resp = requests.get(f"{API_URL}/users/me", auth=st.session_state.auth)
-            if resp.status_code == 200:
-                user = resp.json()
-                st.success(f"Connecté : {user['prenom']} {user['nom']}")
-                st.write(f"@{user['username']}")
+        resp = requests.get(f"{API_URL}/users/me", auth=st.session_state.auth)
 
-                # Ici tu peux appeler tes endpoints followers / followed
-                followers_resp = requests.get(f"{API_URL}/users/{user['id']}/followers", auth=st.session_state.auth)
-                followed_resp = requests.get(f"{API_URL}/users/{user['id']}/followed", auth=st.session_state.auth)
+        if resp.status_code == 200:
+            user = resp.json()
 
-                try:
-                    n_followers = len(followers_resp.json()) if followers_resp.status_code == 200 else 0
-                    n_followed = len(followed_resp.json()) if followed_resp.status_code == 200 else 0
-                except Exception:
-                    n_followers = n_followed = 0
+            st.success(f"Connecté : {user['prenom']} {user['nom']}")
+            st.write(f"@{user['username']}")
 
-                st.write(f"Nombre de followers : {n_followers}")
-                st.write(f"Nombre de followed : {n_followed}")
+            # ✅ On utilise followers_count / followed_count renvoyés par l’API
+            st.write(f"👥 Followers : **{user['followers_count']}**")
+            st.write(f"➡️ Suivis : **{user['followed_count']}**")
 
-                if st.button("Se déconnecter"):
-                    st.session_state.auth = None
-                    st.rerun()
-                return
+            # --- Suggestions d'utilisateurs à suivre ---
+            st.subheader("🔥 Suggestions d'amis")
+
+            suggestions_resp = requests.get(f"{API_URL}/users/suggestions", auth=st.session_state.auth)
+
+            if suggestions_resp.status_code == 200:
+                suggestions = suggestions_resp.json()
+
+                for s in suggestions:
+                    # ✅ Le backend renvoie bien id_user ici (car on retourne l’objet User)
+                    col1, col2 = st.columns([3, 1])
+
+                    with col1:
+                        st.write(f"**{s['prenom']} {s['nom']}** (@{s['username']})")
+
+                    with col2:
+                        if st.button("Suivre", key=f"follow_{s['id_user']}"):
+                            follow = requests.post(
+                                f"{API_URL}/users/{s['id_user']}/follow",
+                                auth=st.session_state.auth
+                            )
+                            if follow.status_code == 200:
+                                st.success(f"✅ Vous suivez maintenant {s['prenom']} !")
+                                st.rerun()
+                            else:
+                                st.error(follow.json().get("detail", "Erreur"))
             else:
-                # Sécuriser le JSON decode
-                try:
-                    error_detail = resp.json().get("detail", "Erreur")
-                except Exception:
-                    error_detail = resp.text or "Erreur inconnue"
-                st.error(f"Erreur connexion API : {error_detail}")
-        except requests.exceptions.RequestException as e:
-            st.error(f"Erreur connexion API : {e}")
-        return
+                st.write("Aucune suggestion pour le moment 😢.")
 
-    # Formulaire connexion / création
+            # Bouton déconnexion
+            if st.button("Se déconnecter"):
+                st.session_state.auth = None
+                st.rerun()
+            return
+
+        else:
+            st.error("Erreur d'authentification")
+            return
+
+    # -------------------------
+    # FORMULAIRE CONNEXION/CRÉATION
+    # -------------------------
     action = st.radio("Action", ["Se connecter", "Créer un compte"])
 
     if action == "Se connecter":
         username = st.text_input("Nom d'utilisateur")
         password = st.text_input("Mot de passe", type="password")
         if st.button("Connexion"):
-            try:
-                resp = requests.get(f"{API_URL}/users/me", auth=(username, password))
-                if resp.status_code == 200:
-                    st.session_state.auth = (username, password)
-                    st.success("Connexion réussie ✅")
-                    st.rerun()
-                else:
-                    try:
-                        error_detail = resp.json().get("detail", "Erreur")
-                    except Exception:
-                        error_detail = resp.text or "Erreur inconnue"
-                    st.error(error_detail)
-            except requests.exceptions.RequestException as e:
-                st.error(f"Erreur connexion API : {e}")
+            resp = requests.get(f"{API_URL}/users/me", auth=(username, password))
+            if resp.status_code == 200:
+                st.session_state.auth = (username, password)
+                st.success("Connexion réussie ✅")
+                st.rerun()
+            else:
+                st.error(resp.json().get("detail", "Identifiants incorrects"))
 
     else:  # Créer un compte
         prenom = st.text_input("Prénom")
@@ -73,16 +85,9 @@ def users_page():
         password = st.text_input("Mot de passe", type="password")
 
         if st.button("Créer mon compte"):
-            try:
-                data = {"prenom": prenom, "nom": nom, "username": username, "password": password}
-                resp = requests.post(f"{API_URL}/users/", data=data)
-                if resp.status_code == 200:
-                    st.success("Compte créé ✅ Vous pouvez vous connecter.")
-                else:
-                    try:
-                        error_detail = resp.json().get("detail", "Erreur")
-                    except Exception:
-                        error_detail = resp.text or "Erreur inconnue"
-                    st.error(error_detail)
-            except requests.exceptions.RequestException as e:
-                st.error(f"Erreur connexion API : {e}")
+            data = {"prenom": prenom, "nom": nom, "username": username, "password": password}
+            resp = requests.post(f"{API_URL}/users/", data=data)
+            if resp.status_code == 200:
+                st.success("Compte créé ✅ Vous pouvez vous connecter.")
+            else:
+                st.error(resp.json().get("detail", "Erreur"))
