@@ -15,20 +15,20 @@ class ParcoursDao(metaclass=Singleton):
                 with connection.cursor() as cursor:
                     cursor.execute(
                         """
-                        INSERT INTO parcours(depart, arrivee, id_activite, id_user) VALUES 
-                        (%(depart)s, %(arrivee)s,%(id_activite)s,%(id_user)s) RETURNING id_parcours;
+                        INSERT INTO app.parcours(depart, arrivee, id_activite, id_user) 
+                        VALUES (%(depart)s, %(arrivee)s, %(id_activite)s, %(id_user)s) 
+                        RETURNING id_parcours;
                         """,
                         {
                             "depart": parcours.depart,
                             "arrivee": parcours.arrivee,
-                            "id_activite": parcours.id_activite,
+                            "id_activite": parcours.id_activite if parcours.id_activite is not None else None,
                             "id_user": parcours.id_user,
                         },
                     )
                     res = cursor.fetchone()
         except Exception as e:
             logging.error(f"Erreur lors de la création du parcours : {e}")
-
             created = False
             if res:
                 parcours.id_parcours = res["id_parcours"]
@@ -55,13 +55,13 @@ class ParcoursDao(metaclass=Singleton):
                 id_parcours=res["id_parcours"],
                 depart=res["depart"],
                 arrivee=res["arrivee"],
-                id_activite=res["id_activite"],
+                id_activite=res["id_activite"] if res["id_activite"] is not None else None,
                 id_user=res["id_user"],
             )
         return parcours
 
     def modifier(self, parcours: Parcours) -> bool:
-        """Mise à jour d'un parcours """
+        """Mise à jour d'un parcours"""
         res = None
         try:
             with DBConnection().connection as connection:
@@ -79,7 +79,7 @@ class ParcoursDao(metaclass=Singleton):
                         {
                             "depart": parcours.depart,
                             "arrivee": parcours.arrivee,
-                            "id_activite": parcours.id_activite,
+                            "id_activite": parcours.id_activite if parcours.id_activite is not None else None,
                             "id_user": parcours.id_user,
                             "id_parcours": parcours.id_parcours,
                         },

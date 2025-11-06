@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional
 from business_object.user import User
 from business_object.activite import Activite
 
@@ -9,16 +9,16 @@ class Parcours:
 
     Attributs basés sur le diagramme UML :
     - idParcours: INTEGER (int)
-    - depart: TUPLE (Tuple[float, float])
-    - arrivee: TUPLE (Tuple[float, float])
+    - depart: STRING (str) - Description ou adresse du point de départ
+    - arrivee: STRING (str) - Description ou adresse du point d'arrivée
     - idActivite: INTEGER - L'activité associée (peut être nulle)
     - idUser: INTEGER (int)
     """
-    def __init__(self, depart: Tuple[float, float], arrivee: Tuple[float, float],
-                 activites: list[Activite], user: User, idParcours: int = None
-                 ):
-        self.idParcours = idParcours
+    def __init__(self, depart: str, arrivee: str,
+                 id_activite: Optional[int], user: User, id_parcours: int = None):
+        self.id_parcours = id_parcours
         self.depart = depart
         self.arrivee = arrivee
-        self.activites = activites
+        self.id_activite = id_activite  # Peut être None si aucune activité associée
         self.user = user
+
