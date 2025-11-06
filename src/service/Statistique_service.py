@@ -214,3 +214,33 @@ class StatistiqueService():
         else:
             # Arrondir à 0.5 km près
             return round(distance * 2) / 2
+
+    def afficherStats(self, date_reference: date) -> dict:
+        """
+        Retourne les statistiques hebdomadaires de l'utilisateur :
+        - nombre d'activités,
+        - temps total de sport,
+        - distance totale parcourue.
+
+        Parameters:
+            date_reference (date): Une date appartenant à la semaine étudiée.
+
+        Returns:
+            dict: Résumé des statistiques hebdomadaires.
+        """
+        if not isinstance(date_reference, date):
+            raise TypeError("date_reference doit être un objet datetime.date")
+
+        nb_activites = self.get_nombre_services_semaine(self.user.idUser)
+        temps_total = self.calculer_temps_sport_par_semaine(date_reference)
+        distance_totale = self.calculer_kilometres_par_semaine(date_reference)
+
+        return {
+            "Utilisateur": self.user.username,
+            "Période": self._get_bornes_semaine(date_reference),
+            "Statistiques": {
+                "Nombre d'activités": nb_activites,
+                "Temps total d'activité en minutes": round(temps_total, 2),
+                "Distance totale en kilomètres": round(distance_totale, 2)
+            }
+        }
