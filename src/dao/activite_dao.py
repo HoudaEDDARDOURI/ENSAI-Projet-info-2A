@@ -1,10 +1,12 @@
 import logging
 import psycopg2
+from typing import List
 from dao.db_connection import DBConnection
 from business_object.activite import Activite
 from business_object.course import Course
 from business_object.natation import Natation
 from business_object.cyclisme import Cyclisme
+from business_object.user import User
 from utils.singleton import Singleton
 
 
@@ -56,7 +58,8 @@ class ActiviteDao(metaclass=Singleton):
         return created
 
     def lire_activites_par_user(self, id_user: int) -> List[Activite]:
-    """Récupère toutes les activités d'un utilisateur par son ID."""
+        """Récupère toutes les activités d'un utilisateur par son ID."""
+    
     activites: List[Activite] = []
 
     try:
