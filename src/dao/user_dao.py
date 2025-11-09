@@ -5,6 +5,7 @@ from dao.db_connection import DBConnection
 from utils.singleton import Singleton
 from business_object.user import User
 from psycopg import errors
+from typing import List
 
 load_dotenv()  # charge les variables depuis le fichier .env
 host = os.environ['POSTGRES_HOST']
@@ -119,7 +120,6 @@ class UserDao(metaclass=Singleton):
             return None, f"Erreur SQL : {e}"
         except Exception as e:
             return None, f"Erreur inattendue : {e}"
-
 
     def trouver_par_username(self, username: str) -> User | None:
         try:
@@ -265,5 +265,33 @@ class UserDao(metaclass=Singleton):
             logging.error(f"Erreur lors de la récupération des followed : {e}")
             return []
 
+    def lister_tous_les_users(self) -> List[User]:
+        """Récupère tous les utilisateurs de la base de données."""
+        users: List[User] = []
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        SELECT id_user, prenom, nom, username, password
+                        FROM user_app;
+                        """
+                    )
+                    results = cursor.fetchall()
 
-        
+                    for res in results:
+                        users.append(
+                            User(
+                                id_user=res["id_user"],
+                                prenom=res["prenom"],
+                                nom=res["nom"],
+                                username=res["username"],
+                                password=res["password"],
+                            )
+                        )
+        except errors.Error as e:
+            logging.error(f"Erreur SQL : {e.pgerror}")
+        except Exception:
+            logging.exception("Erreur inattendue lors de la récupération des utilisateurs")
+
+        return users
