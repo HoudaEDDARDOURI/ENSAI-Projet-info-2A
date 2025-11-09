@@ -10,18 +10,15 @@ class StatistiqueService():
             raise TypeError("L'attribut 'user' doit être une instance de la classe User.")
         self.user = user
 
-    def get_nombre_services_semaine(self, id_utilisateur):
+    def get_nombre_services_semaine(self, date_reference):
         """Calcule et retourne le nombre d'activités (services)
-        de l'utilisateur au cours de la semaine."""
+        de l'utilisateur au cours de la semaine de la date_reference."""
 
-        aujourd_hui = date.today()
-        debut_semaine, fin_semaine = self._get_bornes_semaine(aujourd_hui)
-
-        toutes_activites = self.activitite_service.afficher_toutes_activites(id_utilisateur)
+        debut_semaine, fin_semaine = self._get_bornes_semaine(date_reference)
 
         activites_semaine = [
-            a for a in toutes_activites
-            if debut_semaine <= a.date_activite <= fin_semaine
+            a for a in self.user.activites
+            if debut_semaine <= a.date <= fin_semaine
         ]
 
         return len(activites_semaine)
@@ -231,7 +228,7 @@ class StatistiqueService():
         if not isinstance(date_reference, date):
             raise TypeError("date_reference doit être un objet datetime.date")
 
-        nb_activites = self.get_nombre_services_semaine(self.user.idUser)
+        nb_activites = self.get_nombre_services_semaine(date_reference)
         temps_total = self.calculer_temps_sport_par_semaine(date_reference)
         distance_totale = self.calculer_kilometres_par_semaine(date_reference)
 

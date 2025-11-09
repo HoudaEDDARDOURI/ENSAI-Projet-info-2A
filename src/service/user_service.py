@@ -9,12 +9,15 @@ from dao.db_connection import DBConnection
 from business_object.course import Course
 from business_object.natation import Natation
 from business_object.cyclisme import Cyclisme
+import logging
+from typing import List
 
 
 class UserService:
 
     def __init__(self):
         self.userdao = UserDao()
+        self.activitedao = ActiviteDao()
 
     def creer_user(self, prenom, nom, username, mot_de_passe) -> User:
         """Création d'un utilisateur à partir de ses attributs"""
@@ -46,7 +49,16 @@ class UserService:
 
     def lire_user(self, id_user: int) -> User | None:
         """Retourne un utilisateur selon son identifiant."""
-        return self.userdao.lire(id_user)
+        user = self.userdao.lire(id_user)
+
+        if user:
+            try:
+                user.activites = self.activitedao.lire_activites_par_user(id_user)
+            except Exception as e:
+                logging.error(f"Erreur lors du chargement des activités pour l'utilisateur {id_user}: {e}")
+                user.activites = [] # Assure que la liste est au moins vide
+            return user
+        return None
 
     def modifier_user(self, user: User, nouveau_mot_de_passe: str | None = None) -> bool:
         """
@@ -74,6 +86,10 @@ class UserService:
             user.mot_de_passe = hash_password(nouveau_mot_de_passe)
 
         return self.userdao.modifier(user)
+
+    def lister_tous_les_users(self) -> List[User]:
+        """Utilise le DAO pour lister tous les utilisateurs."""
+        return self.userdao.lister_tous_les_users()
 
     def lister_followers(self, user: User):
         """Liste les followers de l'utilisateur"""
