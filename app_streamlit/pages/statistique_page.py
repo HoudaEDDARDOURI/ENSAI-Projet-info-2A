@@ -14,11 +14,11 @@ def statistiques_page():
 
     # Infos user disponibles
     user_info = st.session_state.get('user')
-    if not user_info or 'id_user' not in user_info:
+    if not user_info or 'id' not in user_info:
         st.error("Impossible de récupérer les informations utilisateur.")
         return
 
-    user_id = user_info['id_user']
+    user_id = user_info['id']
 
     # Sélection de Période
 
@@ -41,10 +41,9 @@ def statistiques_page():
     # Récupération des statistiques
     try:
         # URL d'appel
-        endpoint = f"{API_URL}/stats/hebdomadaires"
+        endpoint = f"{API_URL}/statistiques/{user_id}"
         params = {
-            "user_id": user_id,
-            "date_reference": date_str
+            "reference_date": date_str
         }
 
         # Récupération des données
@@ -56,7 +55,8 @@ def statistiques_page():
         # Affichage des données
 
         stats = stats_data.get("Statistiques", {})
-        periode = stats_data.get("Période", (date_reference, date_reference + datetime.timedelta(days=6)))
+        # Ajustement pour la compatibilité des types, car date_reference est un objet date
+        periode = stats_data.get("Période", (date_reference.isoformat(), (date_reference + timedelta(days=6)).isoformat()))
 
         # Mise en forme de la période (le tuple de dates est converti en chaîne)
         debut_semaine = datetime.fromisoformat(periode[0]).strftime("%d/%m/%Y")
@@ -110,9 +110,9 @@ def statistiques_page():
 
     if st.button(f"Calculer la distance pour la {sport_choisi}"):
         try:
-            endpoint_pred = f"{API_URL}/stats/prediction"
+            # URL d'appel
+            endpoint_pred = f"{API_URL}/statistiques/prediction/{user_id}"
             params_pred = {
-                "user_id": user_id,
                 "type_sport": sport_choisi.lower()
             }
 
