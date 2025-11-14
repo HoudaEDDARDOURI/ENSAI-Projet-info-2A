@@ -58,16 +58,25 @@ def get_coordonnees(id_parcours: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @parcours_router.get("/{id_parcours}/visualiser")
 def visualiser_parcours(id_parcours: int):
     """
-    Génère la carte HTML du parcours.
+    Génère et retourne le contenu HTML de la carte du parcours.
     """
     try:
         file_path = parcours_service.visualiser_parcours(id_parcours)
-        return {"fichier_html": file_path}
+        
+        # Lire le contenu du fichier HTML généré
+        with open(file_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        
+        # Optionnel : supprimer le fichier temporaire après lecture
+        # import os
+        # os.remove(file_path)
+        
+        return {"html_content": html_content}
 
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la génération de la carte : {str(e)}")

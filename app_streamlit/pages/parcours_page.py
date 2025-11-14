@@ -1,8 +1,14 @@
 import streamlit as st
 import requests
+import streamlit.components.v1 as components
+
+
+API_URL = "http://127.0.0.1:8000"  # L'URL de ton API
+
+import streamlit as st
+import requests
 
 API_URL = "http://127.0.0.1:8000"
-
 
 def parcours_page():
     st.header("🗺️ Gestion des Parcours")
@@ -61,68 +67,42 @@ def parcours_page():
     st.markdown("---")
 
     # ==================================================
-    # ✔ SECTION 2 — LIRE / VISUALISER UN PARCOURS
+    # ✔ SECTION 2 — VISUALISER UN PARCOURS
     # ==================================================
 
-    st.subheader("🔍 Rechercher un parcours")
+    st.subheader("🔍 Visualiser un parcours")
 
-    parcours_id = st.number_input("ID du parcours :", min_value=1, step=1)
+    # Demander l'ID du parcours à l'utilisateur
+    parcours_id = st.number_input("Entrez l'ID du parcours à visualiser :", min_value=1, step=1)
 
-    if st.button("Charger les informations"):
-        try:
-            response = requests.get(f"{API_URL}/parcours/{parcours_id}")
-            response.raise_for_status()
-            parcours = response.json()
-
-            st.success("Parcours trouvé ✔")
-            st.json(parcours)
-
-        except Exception as e:
-            st.error(f"Erreur : {e}")
-
-    st.markdown("---")
-
-    # ==================================================
-    # ✔ SECTION 3 — VISUALISATION / TELECHARGEMENT
-    # ==================================================
-
-    st.subheader("🌍 Visualiser ou Télécharger le parcours")
-
-    colA, colB = st.columns(2)
-
-    with colA:
-        if st.button("Visualiser la carte HTML"):
+    # Bouton pour visualiser la carte
+    if st.button("Visualiser la carte HTML"):
+        if parcours_id:
             try:
+                # Envoie une requête à l'API pour générer la carte
                 response = requests.get(f"{API_URL}/parcours/{parcours_id}/visualiser")
                 response.raise_for_status()
-                file_path = response.json().get("fichier_html")
 
-                st.success("Carte générée ✔")
-                st.write(f"📄 Fichier : `{file_path}`")
-
-                st.markdown(f"[👉 Ouvrir la carte]({file_path})", unsafe_allow_html=True)
-
+                # Récupère le contenu HTML directement
+                html_content = response.json().get("html_content")
+                
+                if html_content:
+                    st.success("Carte générée ✔")
+                    
+                    # Affiche la carte directement dans Streamlit
+                    components.html(html_content, height=600, scrolling=True)
+                else:
+                    st.error("Le contenu HTML n'a pas pu être récupéré.")
+                    
+            except requests.exceptions.HTTPError as e:
+                st.error(f"Erreur HTTP : {e.response.status_code} - {e.response.text}")
             except Exception as e:
-                st.error(f"Erreur : {e}")
-
-    with colB:
-        if st.button("Télécharger le fichier"):
-            try:
-                response = requests.get(f"{API_URL}/parcours/{parcours_id}/telecharger")
-                response.raise_for_status()
-                file_path = response.json().get("fichier_telecharge")
-
-                st.success("Téléchargement prêt ✔")
-                st.write(f"📦 `{file_path}`")
-                st.markdown(f"[⬇ Télécharger]({file_path})", unsafe_allow_html=True)
-
-            except Exception as e:
-                st.error(f"Erreur : {e}")
-
-    st.markdown("---")
+                st.error(f"Erreur lors de la visualisation du parcours : {e}")
+        else:
+            st.error("Veuillez entrer un ID valide pour le parcours.")
 
     # ==================================================
-    # ✔ SECTION 4 — COORDONNÉES DU PARCOURS
+    # ✔ SECTION 3 — COORDONNÉES DU PARCOURS
     # ==================================================
 
     st.subheader("📐 Coordonnées du parcours")
