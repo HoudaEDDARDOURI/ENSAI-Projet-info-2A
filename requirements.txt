@@ -17,3 +17,5 @@ gpxpy
 dotenv
 psycopg
 passlib
+folium
+geopy
