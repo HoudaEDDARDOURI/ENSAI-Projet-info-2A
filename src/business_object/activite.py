@@ -20,3 +20,10 @@ class Activite(ABC):
     @abstractmethod
     def afficher_details(self):
         pass
+
+
+# Sous-classe concrète
+
+class ActiviteConcrète(Activite):
+    def afficher_details(self):
+        return f"{self.titre} - {self.type_sport} - {self.distance} km"

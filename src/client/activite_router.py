@@ -1,8 +1,10 @@
+# activite_router.py
 from fastapi import APIRouter, Depends, HTTPException
-from service.activite_service import ActiviteService
-from client.auth import get_current_user
 from pydantic import BaseModel
 from typing import List, Optional
+from service.activite_service import ActiviteService
+from client.auth import get_current_user
+from business_object.activite import Activite
 
 activite_service = ActiviteService()
 
@@ -11,9 +13,8 @@ activite_router = APIRouter(
     tags=["activites"]
 )
 
-# ----------------- SCHEMA -----------------
-class ActiviteSchema(BaseModel):
-    id_activite: Optional[int]
+# ----------------- SCHEMAS -----------------
+class ActiviteCreateSchema(BaseModel):
     date: str
     type_sport: str
     distance: float
@@ -23,9 +24,12 @@ class ActiviteSchema(BaseModel):
     description: Optional[str] = ""
     id_user: int
 
+class ActiviteSchema(ActiviteCreateSchema):
+    id_activite: int
+
 # ----------------- CREATION -----------------
 @activite_router.post("/", response_model=ActiviteSchema)
-def creer_activite(activite: ActiviteSchema, current_user=Depends(get_current_user)):
+def creer_activite(activite: ActiviteCreateSchema, current_user=Depends(get_current_user)):
     """Créer une nouvelle activité pour l'utilisateur connecté"""
     a = activite_service.creer_activite(
         date=activite.date,
@@ -73,9 +77,8 @@ def get_user_activites(id_user: int, current_user=Depends(get_current_user)):
 
 # ----------------- MODIFICATION -----------------
 @activite_router.put("/{id_activite}", response_model=ActiviteSchema)
-def modifier_activite(id_activite: int, activite: ActiviteSchema, current_user=Depends(get_current_user)):
+def modifier_activite(id_activite: int, activite: ActiviteCreateSchema, current_user=Depends(get_current_user)):
     """Modifier une activité existante"""
-    from business_object.activite import Activite
     a = Activite(
         id_activite=id_activite,
         date=activite.date,
