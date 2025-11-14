@@ -1,10 +1,8 @@
-# activite_router.py
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 from service.activite_service import ActiviteService
 from client.auth import get_current_user
-from business_object.activite import Activite
 
 activite_service = ActiviteService()
 
@@ -13,8 +11,9 @@ activite_router = APIRouter(
     tags=["activites"]
 )
 
-# ----------------- SCHEMAS -----------------
-class ActiviteCreateSchema(BaseModel):
+# ----------------- SCHEMA -----------------
+class ActiviteSchema(BaseModel):
+    id_activite: Optional[int] = None
     date: str
     type_sport: str
     distance: float
@@ -24,12 +23,9 @@ class ActiviteCreateSchema(BaseModel):
     description: Optional[str] = ""
     id_user: int
 
-class ActiviteSchema(ActiviteCreateSchema):
-    id_activite: int
-
 # ----------------- CREATION -----------------
 @activite_router.post("/", response_model=ActiviteSchema)
-def creer_activite(activite: ActiviteCreateSchema, current_user=Depends(get_current_user)):
+def creer_activite(activite: ActiviteSchema, current_user=Depends(get_current_user)):
     """Créer une nouvelle activité pour l'utilisateur connecté"""
     a = activite_service.creer_activite(
         date=activite.date,
@@ -77,9 +73,22 @@ def get_user_activites(id_user: int, current_user=Depends(get_current_user)):
 
 # ----------------- MODIFICATION -----------------
 @activite_router.put("/{id_activite}", response_model=ActiviteSchema)
-def modifier_activite(id_activite: int, activite: ActiviteCreateSchema, current_user=Depends(get_current_user)):
+def modifier_activite(id_activite: int, activite: ActiviteSchema, current_user=Depends(get_current_user)):
     """Modifier une activité existante"""
-    a = Activite(
+    # Création d'un objet concret
+    class ActiviteConcrète:
+        def __init__(self, id_activite, date, type_sport, distance, duree, trace, titre, description, id_user):
+            self.id_activite = id_activite
+            self.date = date
+            self.type_sport = type_sport
+            self.distance = distance
+            self.duree = duree
+            self.trace = trace
+            self.titre = titre
+            self.description = description
+            self.id_user = id_user
+
+    a = ActiviteConcrète(
         id_activite=id_activite,
         date=activite.date,
         type_sport=activite.type_sport,

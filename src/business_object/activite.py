@@ -26,4 +26,15 @@ class Activite(ABC):
 
 class ActiviteConcrète(Activite):
     def afficher_details(self):
-        return f"{self.titre} - {self.type_sport} - {self.distance} km"
+        # Par exemple retourne un dict des attributs
+        return {
+            "id_activite": self.id_activite,
+            "date": self.date,
+            "type_sport": self.type_sport,
+            "distance": self.distance,
+            "duree": self.duree,
+            "trace": self.trace,
+            "titre": self.titre,
+            "description": self.description,
+            "id_user": self.id_user
+        }
