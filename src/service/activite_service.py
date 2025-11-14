@@ -15,8 +15,7 @@ class ActiviteService:
         self.commentaireDao = CommentaireDao()
         self.likeDao = LikeDao()
 
-    def creer_activite(self, date, type_sport, distance, duree, trace, titre, description, id_user,
-                       id_parcours) -> Activite:
+    def creer_activite(self, date, type_sport, distance, duree, trace, titre, description, id_user) -> Activite:
 
         """Création d'une activité à partir de ses attributs"""
         # Choix de la classe concrète selon le type de sport
