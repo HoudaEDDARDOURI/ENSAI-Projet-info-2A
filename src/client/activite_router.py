@@ -121,4 +121,3 @@ def supprimer_activite(id_activite: int, current_user=Depends(get_current_user))
     ok = activite_service.supprimer_activite(id_activite)
     if not ok:
         raise HTTPException(status_code=400, detail="Erreur suppression activité")
-    return {"detail": "Activité supprimée"}
