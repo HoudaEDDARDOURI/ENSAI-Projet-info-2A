@@ -1,4 +1,3 @@
-# activite_page.py
 import streamlit as st
 import requests
 import gpxpy
@@ -37,7 +36,12 @@ def activites_page():
 
     # --- GET activities from API ---
     try:
-        resp = requests.get(f"{API_URL}/activites/", auth=st.session_state.auth, timeout=10)
+        resp = requests.get(
+            f"{API_URL}/activites/",
+            params={"id_user": st.session_state.user_id},
+            auth=st.session_state.auth,
+            timeout=10
+        )
         resp.raise_for_status()
         activites = resp.json() or []
     except Exception as e:
@@ -50,7 +54,7 @@ def activites_page():
         st.info("Aucune activité trouvée.")
     else:
         for act in activites:
-            act_id = act.get("id")
+            act_id = act.get("id_activite")
             title = act.get("titre", "Sans titre")
             t_sport = act.get("type_sport", "N/A")
             dist = act.get("distance", 0.0)
@@ -67,7 +71,11 @@ def activites_page():
                 # Supprimer
                 if col2.button("🗑️ Supprimer", key=f"del_{act_id}"):
                     try:
-                        del_resp = requests.delete(f"{API_URL}/activites/{act_id}", auth=st.session_state.auth, timeout=10)
+                        del_resp = requests.delete(
+                            f"{API_URL}/activites/{act_id}",
+                            auth=st.session_state.auth,
+                            timeout=10
+                        )
                         if del_resp.status_code == 200:
                             st.success("✅ Activité supprimée")
                             st.rerun()
@@ -86,7 +94,7 @@ def activites_page():
         st.info("✏️ Mode modification")
         titre_default = modif_data.get("titre", "")
         type_sport_default = (modif_data.get("type_sport") or "Course").capitalize()
-        date_default = datetime.fromisoformat(modif_data.get("date_activite")).date() if modif_data.get("date_activite") else datetime.today().date()
+        date_default = datetime.fromisoformat(modif_data.get("date")).date() if modif_data.get("date") else datetime.today().date()
         distance_default = float(modif_data.get("distance", 0.0))
     else:
         titre_default = ""
@@ -96,10 +104,13 @@ def activites_page():
 
     titre = st.text_input("Titre", value=titre_default)
     type_sport_list = ["Course", "Natation", "Cyclisme"]
-    type_sport = st.selectbox("Type de sport", type_sport_list, index=type_sport_list.index(type_sport_default) if type_sport_default in type_sport_list else 0)
+    type_sport = st.selectbox(
+        "Type de sport",
+        type_sport_list,
+        index=type_sport_list.index(type_sport_default) if type_sport_default in type_sport_list else 0
+    )
     fichier_gpx = st.file_uploader("Télécharger fichier GPX (optionnel)", type=["gpx"])
 
-    # Distance calculée ou manuelle
     if fichier_gpx:
         distance, duree = extraire_info_gpx(fichier_gpx)
         st.info(f"Distance calculée: {distance} km • Durée: {duree or 'N/A'}")
@@ -115,18 +126,22 @@ def activites_page():
             "titre": titre,
             "type_sport": type_sport.lower(),
             "distance": distance,
-            "date_activite": str(date_activite),
-            "id_parcours": 1,
+            "date": str(date_activite),
             "trace": fichier_gpx.name if fichier_gpx else modif_data.get("trace", ""),
             "description": modif_data.get("description", "") if modif_data else "",
-            "duree": duree
+            "duree": duree,
+            "id_user": st.session_state.user_id
         }
 
         try:
             if st.session_state.get("modif_id"):
-                # Modification
                 act_id = st.session_state["modif_id"]
-                put_resp = requests.put(f"{API_URL}/activites/{act_id}", data=payload, auth=st.session_state.auth, timeout=10)
+                put_resp = requests.put(
+                    f"{API_URL}/activites/{act_id}",
+                    json=payload,
+                    auth=st.session_state.auth,
+                    timeout=10
+                )
                 if put_resp.status_code == 200:
                     st.success("✅ Activité modifiée")
                     st.session_state.modif_id = None
@@ -135,8 +150,12 @@ def activites_page():
                 else:
                     st.error(f"Erreur modification: {put_resp.json().get('detail', put_resp.text)}")
             else:
-                # Création
-                post_resp = requests.post(f"{API_URL}/activites/", data=payload, auth=st.session_state.auth, timeout=10)
+                post_resp = requests.post(
+                    f"{API_URL}/activites/",
+                    json=payload,
+                    auth=st.session_state.auth,
+                    timeout=10
+                )
                 if post_resp.status_code == 200:
                     st.success("✅ Activité enregistrée")
                     st.rerun()
