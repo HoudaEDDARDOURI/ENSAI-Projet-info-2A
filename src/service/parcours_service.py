@@ -27,7 +27,7 @@ class ParcoursService:
         self.activite_dao = ActiviteDao()
         self.user_dao = UserDao()
 
-    def creer_parcours(self, depart: str, arrivee: str, id_activite: int | None, id_user: int) -> bool:
+    def creer_parcours(self, depart: str, arrivee: str, id_activite: int | None, id_user: int) -> int:
         """
         Crée un nouveau parcours en validant et en passant la responsabilité de la persistance au ParcoursDao.
         """

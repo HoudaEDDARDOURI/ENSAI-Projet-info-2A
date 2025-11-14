@@ -37,9 +37,9 @@ def parcours_page():
         arrivee = st.text_input("🏁 Adresse d'arrivée")
 
     id_activite = st.text_input(
-        "ID d'activité associée (optionnel)", 
+        "ID d'activité", 
         value="", 
-        placeholder="Laisser vide si géocodage"
+        placeholder="Laisser vide si adresse de départ et d'arrivée renseignées"
     )
 
     if id_activite.strip() == "":
@@ -56,65 +56,36 @@ def parcours_page():
                 "id_activite": id_activite
             }
 
+            # 📌 1. Création du parcours
             response = requests.post(f"{API_URL}/parcours/", params=payload)
             response.raise_for_status()
 
+            result = response.json()
+
+            # 📌 Récupération de l'ID renvoyé par l'API
+            parcours_id_created = result.get("id_parcours")
+
             st.success("🎉 Parcours créé avec succès !")
 
-        except Exception as e:
-            st.error(f"Erreur : {e}")
+            # 📌 2. Visualisation automatique
+            if parcours_id_created is not None:
+                vis_response = requests.get(f"{API_URL}/parcours/{parcours_id_created}/visualiser")
+                vis_response.raise_for_status()
 
-    st.markdown("---")
+                html_content = vis_response.json().get("html_content")
 
-    # ==================================================
-    # ✔ SECTION 2 — VISUALISER UN PARCOURS
-    # ==================================================
-
-    st.subheader("🔍 Visualiser un parcours")
-
-    # Demander l'ID du parcours à l'utilisateur
-    parcours_id = st.number_input("Entrez l'ID du parcours à visualiser :", min_value=1, step=1)
-
-    # Bouton pour visualiser la carte
-    if st.button("Visualiser la carte HTML"):
-        if parcours_id:
-            try:
-                # Envoie une requête à l'API pour générer la carte
-                response = requests.get(f"{API_URL}/parcours/{parcours_id}/visualiser")
-                response.raise_for_status()
-
-                # Récupère le contenu HTML directement
-                html_content = response.json().get("html_content")
-                
                 if html_content:
-                    st.success("Carte générée ✔")
-                    
-                    # Affiche la carte directement dans Streamlit
+                    st.info("🗺️ Visualisation automatique du parcours")
                     components.html(html_content, height=600, scrolling=True)
                 else:
-                    st.error("Le contenu HTML n'a pas pu être récupéré.")
-                    
-            except requests.exceptions.HTTPError as e:
-                st.error(f"Erreur HTTP : {e.response.status_code} - {e.response.text}")
-            except Exception as e:
-                st.error(f"Erreur lors de la visualisation du parcours : {e}")
-        else:
-            st.error("Veuillez entrer un ID valide pour le parcours.")
+                    st.warning("Le parcours a été créé, mais le contenu HTML est vide.")
 
-    # ==================================================
-    # ✔ SECTION 3 — COORDONNÉES DU PARCOURS
-    # ==================================================
+            else:
+                st.warning("Le parcours a été créé, mais l'API n'a pas renvoyé d'ID.")
 
-    st.subheader("📐 Coordonnées du parcours")
-
-    if st.button("Afficher les coordonnées"):
-        try:
-            response = requests.get(f"{API_URL}/parcours/{parcours_id}/coordonnees")
-            response.raise_for_status()
-            coords = response.json().get("coordonnees")
-
-            st.success("Coordonnées récupérées ✔")
-            st.json(coords)
+        except requests.exceptions.HTTPError as http_err:
+            st.error(f"Erreur HTTP : {http_err.response.status_code} - {http_err.response.text}")
 
         except Exception as e:
             st.error(f"Erreur : {e}")
+

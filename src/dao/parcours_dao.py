@@ -31,10 +31,10 @@ class ParcoursDao(metaclass=Singleton):
                     )
                     # Récupérer l'ID du parcours créé
                     res = cursor.fetchone()
-                    if res:
-                        parcours.id_parcours = res["id_parcours"]
-                        return True
-                    return False
+                    if not res:
+                        return None
+                    parcours.id_parcours = res["id_parcours"]
+                    return parcours.id_parcours
         except Exception as e:
             logging.error(f"Erreur lors de la création du parcours : {e}")
             return False
