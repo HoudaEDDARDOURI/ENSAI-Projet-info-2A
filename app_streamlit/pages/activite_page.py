@@ -97,7 +97,7 @@ def activites_page():
 
                     if del_resp.status_code == 200:
                         st.success("✅ Activité supprimée")
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         # display detail if available
                         try:
@@ -192,7 +192,7 @@ def activites_page():
                 # reset modification state
                 st.session_state.modif_id = None
                 st.session_state.modif_data = {}
-                st.experimental_rerun()
+                st.rerun()
             else:
                 msg = put_resp.json().get("detail") if put_resp is not None else "Erreur réseau"
                 st.error(f"Erreur lors de la modification: {msg}")
@@ -207,7 +207,7 @@ def activites_page():
 
         if post_resp is not None and post_resp.status_code == 200:
             st.success("✅ Activité enregistrée")
-            st.experimental_rerun()
+            st.rerun()
         else:
             msg = post_resp.json().get("detail") if post_resp is not None else "Erreur réseau"
             st.error(f"Erreur lors de l'enregistrement: {msg}")

@@ -14,3 +14,6 @@ python-multipart
 argon2-cffi
 streamlit
 gpxpy
+dotenv
+psycopg
+passlib
