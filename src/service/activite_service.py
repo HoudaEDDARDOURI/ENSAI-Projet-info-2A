@@ -99,6 +99,4 @@ class ActiviteService:
     def get_likes_activite(self, id_activite: int):
         return self.likeDao.lire_par_activite(id_activite)
 
-    # ------------------------- parcours 
-
-    # CRUD parcours
+    
