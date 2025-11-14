@@ -186,7 +186,7 @@ class StatistiqueService():
         """
         distances_defaut = {
             'course': 5.0,
-            'natation': 1.0,
+            'natation': 1000.0,
             'cyclisme': 20.0
         }
         return distances_defaut.get(type_sport.lower(), 5.0)
