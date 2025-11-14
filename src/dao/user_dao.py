@@ -286,7 +286,7 @@ class UserDao(metaclass=Singleton):
                                 prenom=res["prenom"],
                                 nom=res["nom"],
                                 username=res["username"],
-                                password=res["mot_de_passe"],
+                                mot_de_passe=res["mot_de_passe"],
                             )
                         )
         except errors.Error as e:

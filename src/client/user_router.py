@@ -92,10 +92,19 @@ def supprimer_user(id_user: int, current_user: User = Depends(get_current_user))
 
 @user_router.get("/suggestions")
 def suggestions(current_user: User = Depends(get_current_user)):
-    """Renvoie les 10 premiers utilisateurs sauf soi-même"""
-    users = user_service.lister_tous_les_users()  # Tu as sûrement déjà une méthode similaire
+    users = user_service.lister_tous_les_users()
     users = [u for u in users if u.id_user != current_user.id_user]
-    return users[:10]
+
+    # Convertir en JSON
+    return [
+        {
+            "id_user": u.id_user,
+            "prenom": u.prenom,
+            "nom": u.nom,
+            "username": u.username
+        }
+        for u in users[:10]
+    ]
 
 
 @user_router.post("/{id}/follow")
