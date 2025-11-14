@@ -56,7 +56,7 @@ class ParcoursService:
             depart_coords = (depart_location.latitude, depart_location.longitude)
             arrivee_coords = (arrivee_location.latitude, arrivee_location.longitude)
 
-            # Retourner les coordonnées sous forme de liste de tuples
+            # Retourner les coordonnées sous forme de liste de tuples 
             return [depart_coords, arrivee_coords]
 
     def extraire_coordonnees_de_gpx(self, gpx_file_path: str) -> List[Tuple[float, float]]:
@@ -126,5 +126,5 @@ class ParcoursService:
         file_path = f"parcours_{id_parcours}.html"
         map_.save(file_path)
 
-        return file_path # Retourne à la fois le fichier et l'objet
+        return file_path 
 
