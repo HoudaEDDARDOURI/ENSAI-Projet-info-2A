@@ -1,4 +1,4 @@
-# app_streamlit.py
+# activites_page.py
 import streamlit as st
 import requests
 import gpxpy
@@ -9,7 +9,6 @@ API_URL = "http://127.0.0.1:8000"
 
 # ---------- helpers GPX ----------
 def extraire_info_gpx(fichier_gpx) -> Tuple[float, str]:
-    """Retourne (distance_km, duree_str) depuis un fichier GPX"""
     try:
         gpx = gpxpy.parse(fichier_gpx)
         distance_km = round(gpx.length_3d() / 1000, 2)
@@ -20,29 +19,7 @@ def extraire_info_gpx(fichier_gpx) -> Tuple[float, str]:
         st.error(f"Impossible de parser le GPX: {e}")
         return 0.0, ""
 
-# ---------- page connexion ----------
-def login_page():
-    st.header("🔑 Connexion")
-    
-    username = st.text_input("Nom d'utilisateur")
-    password = st.text_input("Mot de passe", type="password")
-
-    if st.button("Se connecter"):
-        try:
-            # Appel API /login ou /users/me selon ton backend
-            resp = requests.get(f"{API_URL}/users/me", auth=(username, password), timeout=10)
-            if resp.status_code == 200:
-                user_data = resp.json()
-                st.session_state.user_id = user_data["id_user"]
-                st.session_state.auth = (username, password)
-                st.success(f"Connecté en tant que {user_data['nom']}")
-                st.experimental_rerun()  # recharge la page après connexion
-            else:
-                st.error("Identifiants incorrects")
-        except Exception as e:
-            st.error(f"Erreur réseau: {e}")
-
-# ---------- page activités ----------
+# ---------- page ----------
 def activites_page():
     st.header("🏃 Mes Activités")
 
@@ -165,7 +142,6 @@ def activites_page():
 
         try:
             if st.session_state.get("modif_id"):
-                # Modification
                 act_id = st.session_state["modif_id"]
                 payload["id_activite"] = act_id
                 put_resp = requests.put(f"{API_URL}/activites/{act_id}", json=payload, auth=st.session_state.auth, timeout=10)
@@ -177,7 +153,6 @@ def activites_page():
                 else:
                     st.error(f"Erreur modification: {put_resp.json().get('detail', put_resp.text)}")
             else:
-                # Création
                 post_resp = requests.post(f"{API_URL}/activites/", json=payload, auth=st.session_state.auth, timeout=10)
                 if post_resp.status_code == 200:
                     st.success("✅ Activité enregistrée")
@@ -186,13 +161,3 @@ def activites_page():
                     st.error(f"Erreur création: {post_resp.json().get('detail', post_resp.text)}")
         except Exception as e:
             st.error(f"Erreur réseau: {e}")
-
-# ---------- MAIN ----------
-def main():
-    if "user_id" not in st.session_state or not st.session_state.user_id:
-        login_page()
-    else:
-        activites_page()
-
-if __name__ == "__main__":
-    main()

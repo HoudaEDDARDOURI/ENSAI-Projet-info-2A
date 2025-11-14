@@ -13,7 +13,6 @@ def users_page():
     # -------------------------
     st.markdown("""
     <style>
-    /* Bouton bleu Instagram-like */
     div.stButton > button:first-child {
         background-color: #0095F6;
         color: white;
@@ -26,14 +25,22 @@ def users_page():
         background-color: #1877F2;
         color: white;
     }
-
-    /* Ligne utilisateur */
     .user-row {
         padding: 12px 0;
         border-bottom: 1px solid #e6e6e6;
     }
     </style>
     """, unsafe_allow_html=True)
+
+    # -------------------------
+    # 🔑 INITIALISATION SESSION
+    # -------------------------
+    if "auth" not in st.session_state:
+        st.session_state.auth = None
+    if "user" not in st.session_state:
+        st.session_state.user = None
+    if "user_id" not in st.session_state:
+        st.session_state.user_id = None
 
     # -------------------------
     # 🌐 UTILISATEUR CONNECTÉ
@@ -44,9 +51,11 @@ def users_page():
         if resp.status_code == 200:
             user = resp.json()
             st.session_state.user = user  # stocké pour d'autres pages
+            # 🔹 Sécurité : récupération safe de l'id
+            st.session_state.user_id = user.get("id_user") or user.get("id") or None
 
-            st.success(f"Connecté : {user['prenom']} {user['nom']}")
-            st.write(f"@{user['username']}")
+            st.success(f"Connecté : {user.get('prenom', '')} {user.get('nom', '')}")
+            st.write(f"@{user.get('username', '')}")
 
             st.write(f"👥 Followers : **{user.get('followers_count', 0)}**")
             st.write(f"➡️ Suivis : **{user.get('followed_count', 0)}**")
@@ -54,13 +63,11 @@ def users_page():
             st.markdown("---")
             st.subheader("🔥 Suggestions d'amis")
 
-            # -------------------------
-            # 🔍 SUGGESTIONS A SUIVRE
-            # -------------------------
+            # Suggestions
             suggestions_resp = requests.get(f"{API_URL}/users/suggestions", auth=st.session_state.auth)
 
             if suggestions_resp.status_code == 200:
-                suggestions = suggestions_resp.json()
+                suggestions = suggestions_resp.json() or []
 
                 if not suggestions:
                     st.info("Aucune suggestion pour le moment 😢.")
@@ -68,45 +75,39 @@ def users_page():
                 for s in suggestions:
                     with st.container():
                         st.markdown('<div class="user-row">', unsafe_allow_html=True)
-
                         col1, col2 = st.columns([4, 1])
-
                         with col1:
-                            st.write(f"**{s['prenom']} {s['nom']}**")
-                            st.caption(f"@{s['username']}")
-
+                            st.write(f"**{s.get('prenom', '')} {s.get('nom', '')}**")
+                            st.caption(f"@{s.get('username', '')}")
                         with col2:
-                            if st.button("Suivre", key=f"follow_{s['id_user']}"):
+                            if st.button("Suivre", key=f"follow_{s.get('id_user')}"):
                                 follow = requests.post(
-                                    f"{API_URL}/users/{s['id_user']}/follow",
+                                    f"{API_URL}/users/{s.get('id_user')}/follow",
                                     auth=st.session_state.auth
                                 )
                                 if follow.status_code == 200:
-                                    st.success(f"🤝 Vous suivez maintenant {s['prenom']} !")
+                                    st.success(f"🤝 Vous suivez maintenant {s.get('prenom', '')} !")
                                     st.rerun()
                                 else:
                                     st.error(follow.json().get("detail", "Erreur"))
-
                         st.markdown('</div>', unsafe_allow_html=True)
             else:
                 st.error("Impossible de récupérer les suggestions.")
 
             st.markdown("---")
-
-            # -------------------------
-            # 🚪 BOUTON DÉCONNEXION
-            # -------------------------
+            # Déconnexion
             if st.button("Se déconnecter"):
                 st.session_state.auth = None
                 st.session_state.user = None
+                st.session_state.user_id = None
                 st.rerun()
-
             return
 
         else:
             st.error("Erreur d'authentification.")
             st.session_state.auth = None
             st.session_state.user = None
+            st.session_state.user_id = None
             return
 
     # -------------------------
@@ -123,6 +124,7 @@ def users_page():
             if resp.status_code == 200:
                 st.session_state.auth = (username, password)
                 st.session_state.user = resp.json()
+                st.session_state.user_id = st.session_state.user.get("id_user") or st.session_state.user.get("id") or None
                 st.success("Connexion réussie ✅")
                 st.rerun()
             else:
@@ -130,8 +132,7 @@ def users_page():
                     st.error(resp.json().get("detail", "Identifiants incorrects"))
                 except:
                     st.error("Identifiants incorrects.")
-
-    else:  # Création de compte
+    else:
         prenom = st.text_input("Prénom")
         nom = st.text_input("Nom")
         username = st.text_input("Nom d'utilisateur")
