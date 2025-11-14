@@ -100,13 +100,15 @@ def suggestions(current_user: User = Depends(get_current_user)):
 
 @user_router.post("/{id}/follow")
 def suivre_user(id: int, current_user: User = Depends(get_current_user)):
-    autre_user = user_service.get_user_by_id(id)
+    autre_user = user_service.lire_user(id)  # ✅ Fonction existante
     if not autre_user:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable")
 
     try:
-        user_service.suivre(current_user, autre_user)
-        return {"message": "Suivi effectué ✅"}
+        result = user_service.suivre(current_user, autre_user)
+        if result == "deja_suivi":
+            return {"message": "Déjà suivi"}
+        return {"message": "Suivi effectué"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

@@ -20,3 +20,4 @@ dotenv
 psycopg
 passlib
 folium
+geopy
