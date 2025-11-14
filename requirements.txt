@@ -2,6 +2,8 @@ coverage
 InquirerPy
 fastapi
 psycopg2-binary
+psycopg
+passlib
 pylint
 pytest
 python-dotenv
@@ -17,3 +19,5 @@ gpxpy
 dotenv
 psycopg
 passlib
+folium
+geopy

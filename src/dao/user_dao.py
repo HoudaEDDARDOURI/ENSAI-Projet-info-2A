@@ -273,8 +273,8 @@ class UserDao(metaclass=Singleton):
                 with connection.cursor() as cursor:
                     cursor.execute(
                         """
-                        SELECT id_user, prenom, nom, username, password
-                        FROM user_app;
+                        SELECT id_user, prenom, nom, username, mot_de_passe
+                        FROM app.users;
                         """
                     )
                     results = cursor.fetchall()
@@ -286,7 +286,7 @@ class UserDao(metaclass=Singleton):
                                 prenom=res["prenom"],
                                 nom=res["nom"],
                                 username=res["username"],
-                                password=res["password"],
+                                password=res["mot_de_passe"],
                             )
                         )
         except errors.Error as e:

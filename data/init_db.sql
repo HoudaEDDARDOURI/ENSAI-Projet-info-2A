@@ -114,23 +114,19 @@ CREATE TABLE IF NOT EXISTS test.follow (
 
 CREATE TABLE IF NOT EXISTS app.parcours (
     id_parcours SERIAL PRIMARY KEY,
-    id_activite INT NOT NULL REFERENCES activite(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
+    id_activite INT REFERENCES activite(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
     id_user INT NOT NULL REFERENCES users(id_user) ON DELETE CASCADE ON UPDATE CASCADE,
-    depart_lat DECIMAL(9,6) NOT NULL,
-    depart_lon DECIMAL(9,6) NOT NULL,
-    arrivee_lat DECIMAL(9,6) NOT NULL,
-    arrivee_lon DECIMAL(9,6) NOT NULL,
+    depart TEXT,
+    arrivee TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS test.parcours (
     id_parcours SERIAL PRIMARY KEY,
-    id_activite INT NOT NULL REFERENCES activite(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
+    id_activite INT REFERENCES activite(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
     id_user INT NOT NULL REFERENCES users(id_user) ON DELETE CASCADE ON UPDATE CASCADE,
-    depart_lat DECIMAL(9,6) NOT NULL,
-    depart_lon DECIMAL(9,6) NOT NULL,
-    arrivee_lat DECIMAL(9,6) NOT NULL,
-    arrivee_lon DECIMAL(9,6) NOT NULL,
+    depart TEXT,
+    arrivee TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -169,25 +165,4 @@ CREATE TABLE IF NOT EXISTS test.natation (
     denivele NUMERIC(6,2),
     vitesse_minkm DECIMAL(4,2)
 );
-
-ALTER TABLE app.parcours
-    -- Supprimer les anciennes colonnes de latitude et longitude
-    DROP COLUMN depart_lat,
-    DROP COLUMN depart_lon,
-    DROP COLUMN arrivee_lat,
-    DROP COLUMN arrivee_lon;
-    
-    -- Ajouter les nouvelles colonnes de départ et arrivée sous forme de texte
-    ADD COLUMN depart TEXT NOT NULL,
-    ADD COLUMN arrivee TEXT NOT NULL;
-
-    -- Modifier la colonne id_activite pour qu'elle ne soit pas obligatoire
-    ALTER COLUMN id_activite DROP NOT NULL;
-
-ALTER TABLE app.parcours
-ALTER COLUMN depart DROP NOT NULL,
-ALTER COLUMN arrivee DROP NOT NULL;
-
-
-
 
