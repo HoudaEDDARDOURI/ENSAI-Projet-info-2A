@@ -102,8 +102,69 @@ class UserService:
         """Récupère l'utilisateur par son username"""
         return self.userdao.trouver_par_username(username)
 
-
-
-
-
+    def get_feed_activites(self, user: User, limit: int = 20) -> List[Activite]:
+        """
+        Récupère les 20 activités les plus récentes des utilisateurs suivis
         
+        Parameters:
+        - user: L'utilisateur connecté
+        - limit: Nombre d'activités à retourner (par défaut: 20)
+        
+        Returns:
+        - Liste des activités triées par date décroissante (les plus récentes en premier)
+        """
+        try:
+            # 1. Récupérer les utilisateurs suivis
+            followed_users = self.lister_followed(user)
+            
+            if not followed_users:
+                logging.info(f"L'utilisateur {user.id_user} ne suit personne")
+                return []
+            
+            # 2. Collecter toutes les activités des utilisateurs suivis
+            all_activities = []
+            for followed_user in followed_users:
+                activites = self.activitedao.lire_activites_par_user(followed_user.id_user)
+                if activites:
+                    all_activities.extend(activites)
+            
+            if not all_activities:
+                logging.info(f"Aucune activité trouvée pour les utilisateurs suivis")
+                return []
+            
+            # 3. Trier par date (ordre décroissant - plus récentes en premier)
+            all_activities.sort(key=lambda x: x.date if x.date else "", reverse=True)
+            
+            # 4. Retourner les 20 premières
+            return all_activities[:limit]
+            
+        except Exception as e:
+            logging.error(f"Erreur lors de la récupération du feed pour l'utilisateur {user.id_user}: {e}")
+            return []
+
+    def ne_plus_suivre(self, user: User, autre_user: User) -> bool:
+        """
+        Retire une relation de suivi (unfollow).
+        """
+        if user.id_user == autre_user.id_user:
+            raise ValueError("Un utilisateur ne peut pas se unfollow lui-même.")
+        
+        # Retirer de la liste en mémoire
+        if autre_user.id_user in user.following:
+            user.following.remove(autre_user.id_user)
+        
+        # Retirer de la base de données
+        return self.userdao.retirer_suivi(user.id_user, autre_user.id_user)
+
+    def est_suivi(self, user: User, autre_user: User) -> bool:
+        """
+        Vérifie si user suit autre_user.
+        """
+        return self.userdao.est_suivi(user.id_user, autre_user.id_user)
+
+
+
+
+
+
+            

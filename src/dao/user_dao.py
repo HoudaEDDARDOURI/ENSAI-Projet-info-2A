@@ -295,3 +295,60 @@ class UserDao(metaclass=Singleton):
             logging.exception("Erreur inattendue lors de la récupération des utilisateurs")
 
         return users
+
+
+    def retirer_suivi(self, id_user: int, id_autre_user: int) -> bool:
+        """
+        Retire une relation de suivi (unfollow).
+        
+        Parameters:
+        - id_user: ID de l'utilisateur qui veut arrêter de suivre
+        - id_autre_user: ID de l'utilisateur à ne plus suivre
+        
+        Returns:
+        - True si le suivi a été retiré avec succès
+        - False si erreur ou si la relation n'existait pas
+        """
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        DELETE FROM app.follow
+                        WHERE id_follower = %(id_user)s 
+                        AND id_followed = %(id_autre_user)s;
+                        """,
+                        {"id_user": id_user, "id_autre_user": id_autre_user}
+                    )
+                    return cursor.rowcount > 0
+        except Exception as e:
+            logging.error(f"Erreur lors du retrait d'un suivi : {e}")
+            return False
+
+    def est_suivi(self, id_user: int, id_autre_user: int) -> bool:
+        """
+        Vérifie si id_user suit id_autre_user.
+        
+        Parameters:
+        - id_user: ID de l'utilisateur qui suit potentiellement
+        - id_autre_user: ID de l'utilisateur potentiellement suivi
+        
+        Returns:
+        - True si id_user suit id_autre_user
+        - False sinon
+        """
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        SELECT 1 FROM app.follow
+                        WHERE id_follower = %(id_user)s 
+                        AND id_followed = %(id_autre_user)s;
+                        """,
+                        {"id_user": id_user, "id_autre_user": id_autre_user}
+                    )
+                    return cursor.fetchone() is not None
+        except Exception as e:
+            logging.error(f"Erreur lors de la vérification du suivi : {e}")
+            return False
