@@ -15,13 +15,24 @@ parcours_dao = ParcoursDao()
 @parcours_router.post("/")
 def creer_parcours(depart: str, arrivee: str, id_user: int, id_activite: int | None = None):
     """
-    Crée un nouveau parcours.
+    Crée un nouveau parcours et renvoie l'ID créé.
     """
     try:
-        created = parcours_service.creer_parcours(depart, arrivee, id_activite, id_user)
-        if not created:
+        # Renvoie l'ID ou None
+        id_parcours = parcours_service.creer_parcours(depart, arrivee, id_activite, id_user)
+        
+        if id_parcours is None:
             raise HTTPException(status_code=500, detail="Erreur lors de la création du parcours.")
-        return {"message": "Parcours créé avec succès."}
+        
+        # Retour JSON avec ID pour Streamlit
+        return {
+            "message": "Parcours créé avec succès.",
+            "id_parcours": id_parcours
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -58,16 +69,25 @@ def get_coordonnees(id_parcours: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @parcours_router.get("/{id_parcours}/visualiser")
 def visualiser_parcours(id_parcours: int):
     """
-    Génère la carte HTML du parcours.
+    Génère et retourne le contenu HTML de la carte du parcours.
     """
     try:
         file_path = parcours_service.visualiser_parcours(id_parcours)
-        return {"fichier_html": file_path}
+        
+        # Lire le contenu du fichier HTML généré
+        with open(file_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        
+        # Optionnel : supprimer le fichier temporaire après lecture
+        # import os
+        # os.remove(file_path)
+        
+        return {"html_content": html_content}
 
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la génération de la carte : {str(e)}")
