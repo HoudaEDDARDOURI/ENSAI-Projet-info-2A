@@ -106,7 +106,7 @@ def modifier_activite(id_activite: int, activite: ActiviteCreateSchema, current_
     )
 
 # ----------------- SUPPRESSION -----------------
-@activite_router.delete("/{id_activite}")
+@activite_router.delete("/{id_activite}", status_code="204")
 def supprimer_activite(id_activite: int, current_user=Depends(get_current_user)):
     """Supprimer une activité"""
     ok = activite_service.supprimer_activite(id_activite)
