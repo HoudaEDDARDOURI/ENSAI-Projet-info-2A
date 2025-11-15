@@ -5,6 +5,21 @@ from datetime import datetime, date, timedelta
 API_URL = "http://127.0.0.1:8000"
 
 
+def convertir_minutes_vers_hms(total_minutes: float) -> str:
+    """Convertit un total de minutes (float) en HH:MM:SS."""
+    if total_minutes is None or total_minutes < 0:
+        return "00:00:00"
+
+    total_secondes = int(total_minutes * 60)
+    heures = total_secondes // 3600
+    secondes_restantes = total_secondes % 3600
+    minutes = secondes_restantes // 60
+    secondes = secondes_restantes % 60
+
+    # Utilisation de :02d pour garantir deux chiffres (ex: 01:05:30)
+    return f"{heures:02d}h {minutes:02d}min {secondes:02d}s"
+
+
 def statistiques_page():
     st.header("📊 Mes Statistiques")
 
@@ -74,10 +89,9 @@ def statistiques_page():
 
         with col2:
             temps_minutes = stats.get("Temps total d'activité en minutes", 0)
-            # Conversion minutes en HH:MM
-            heures = int(temps_minutes // 60)
-            minutes = int(temps_minutes % 60)
-            temps_formatte = f"{heures}h {minutes}min"
+
+            temps_formatte = convertir_minutes_vers_hms(temps_minutes) 
+
             st.metric(
                 label="Temps total d'activité",
                 value=temps_formatte
