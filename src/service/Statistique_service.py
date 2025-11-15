@@ -10,6 +10,28 @@ class StatistiqueService():
             raise TypeError("L'attribut 'user' doit être une instance de la classe User.")
         self.user = user
 
+    def _safe_date_comparison(self, activite_date, debut_semaine: date, fin_semaine: date) -> bool:
+        """
+        Convertit activite_date en objet date si nécessaire et effectue la comparaison.
+        Retourne False si la date est None ou non convertible.
+        """
+        if activite_date is None:
+            return False
+
+        if isinstance(activite_date, date):
+            date_a_comparer = activite_date
+        elif isinstance(activite_date, str):
+            try:
+                # Tenter la conversion depuis le format ISO
+                date_a_comparer = date.fromisoformat(activite_date)
+            except ValueError:
+                # La chaîne n'est pas un format de date valide. On ignore l'activité.
+                return False
+        else:
+            return False
+
+        return debut_semaine <= date_a_comparer <= fin_semaine
+
     def get_nombre_services_semaine(self, date_reference):
         """Calcule et retourne le nombre d'activités (services)
         de l'utilisateur au cours de la semaine de la date_reference."""
@@ -18,7 +40,7 @@ class StatistiqueService():
 
         activites_semaine = [
             a for a in self.user.activites
-            if debut_semaine <= a.date <= fin_semaine
+            if self._safe_date_comparison(a.date, debut_semaine, fin_semaine)
         ]
 
         return len(activites_semaine)
@@ -47,14 +69,36 @@ class StatistiqueService():
         Calcule la durée totale de sport (en minutes) effectuée par l'utilisateur
         pendant la semaine où se situe la date_reference.
         """
-        # Utilise la méthode utilitaire pour obtenir les bornes de la semaine
         date_debut_semaine, date_fin_semaine = self._get_bornes_semaine(date_reference)
 
         total_duree_minutes = 0.0
         for activite in self.user.activites:
-            if date_debut_semaine <= activite.date <= date_fin_semaine:
-                total_duree_minutes += activite.duree
+
+            if self._safe_date_comparison(activite.date, date_debut_semaine, date_fin_semaine):
+
+                duree_value = activite.duree if activite.duree is not None else ""
+
+                duree_en_minutes = self._convertir_duree_vers_minutes(duree_value)
+                total_duree_minutes += duree_en_minutes
+
         return total_duree_minutes
+
+    def _convertir_duree_vers_minutes(self, duree_str: str) -> float:
+        """Convertit une durée de HH:MM:SS en minutes (float)."""
+        if not duree_str:
+            return 0.0
+
+        try:
+            heures, minutes, secondes = map(int, duree_str.split(':'))
+            total_minutes = heures * 60 + minutes + secondes / 60
+            return total_minutes
+        except ValueError:
+            # Gérer le cas où la chaîne est mal formatée
+            try:
+                # Tente de convertir directement si ce n'est pas HH:MM:SS
+                return float(duree_str) 
+            except (ValueError, TypeError):
+                return 0.0  # Retourne 0 si la conversion échoue
 
     def calculer_kilometres_par_semaine(self, date_reference):
         """
@@ -66,8 +110,12 @@ class StatistiqueService():
 
         total_kilometres = 0.0
         for activite in self.user.activites:
-            if date_debut_semaine <= activite.date <= date_fin_semaine:
-                total_kilometres += activite.distance
+            if self._safe_date_comparison(activite.date, date_debut_semaine, date_fin_semaine):
+                distance_value = activite.distance if activite.distance is not None else 0.0
+                try:
+                    total_kilometres += float(distance_value)
+                except (ValueError, TypeError):
+                    pass
         return total_kilometres
 
     def predire(self, type_sport, nb_entrainements=10):
@@ -109,25 +157,37 @@ class StatistiqueService():
     def _recuperer_dernieres_activites(self, type_sport, limite):
         """
         Récupère les N dernières activités de l'utilisateur pour un sport donné.
-
-        Parameters:
-            type_sport (str): Type de sport
-            limite (int): Nombre maximum d'activités à récupérer
-
-        Returns:
-            list: Liste des activités filtrées et triées par date décroissante
         """
-        # Filtrer les activités par type de sport
+        # Filtre les activités par type de sport
         activites_filtrees = [
             a for a in self.user.activites
             if a.type_sport.lower() == type_sport.lower()
         ]
 
-        # Trier par date décroissante (plus récent d'abord)
-        activites_filtrees.sort(key=lambda a: a.date, reverse=True)
+        # Sécuriser et convertir la date avant le tri (méthode de sécurité)
 
-        # Limiter au nombre demandé
-        return activites_filtrees[:limite]
+        activites_valides = []
+        DATE_MINIMALE = date(1900, 1, 1)  # Date de secours pour les entrées manquantes
+
+        for a in activites_filtrees:
+            date_obj = None
+            if isinstance(a.date, str):
+                try:
+                    date_obj = date.fromisoformat(a.date)
+                except ValueError:
+                    # La date n'est pas convertible, on attribue la date minimale
+                    date_obj = DATE_MINIMALE
+            elif isinstance(a.date, date):
+                date_obj = a.date
+
+            # S'assurer qu'on a une date pour le tri
+            if date_obj:
+                a._sort_date = date_obj
+                activites_valides.append(a)
+
+        # 3. Trier par la nouvelle clé sécurisée
+        activites_valides.sort(key=lambda a: a._sort_date, reverse=True)
+        return activites_valides[:limite]
 
     def _calculer_coefficient_progression(self, activites):
         """
