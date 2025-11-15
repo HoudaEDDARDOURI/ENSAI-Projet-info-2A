@@ -24,6 +24,20 @@ class ActiviteSchema(BaseModel):
     id_user: int
 
 # ----------------- CREATION -----------------
+from fastapi import UploadFile, File
+import os
+from fastapi.responses import JSONResponse
+
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@activite_router.post("/upload_gpx/")
+def upload_gpx(file: UploadFile = File(...)):
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    with open(file_path, "wb") as f:
+        f.write(file.file.read())
+    return {"file_path": file_path}
+
 @activite_router.post("/", response_model=ActiviteSchema)
 def creer_activite(activite: ActiviteSchema, current_user=Depends(get_current_user)):
     """Créer une nouvelle activité pour l'utilisateur connecté"""
