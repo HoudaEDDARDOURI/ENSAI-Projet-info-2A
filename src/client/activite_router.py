@@ -18,9 +18,9 @@ class ActiviteSchema(BaseModel):
     type_sport: str
     distance: float
     duree: str
-    trace: str
-    titre: str
-    description: Optional[str] = ""
+    trace: Optional[str] = None
+    titre: Optional[str] = None
+    description: Optional[str] = None
     id_user: int
 
 # ----------------- CREATION -----------------
