@@ -3,6 +3,7 @@ InquirerPy
 fastapi
 psycopg2-binary
 psycopg
+psycopg2
 passlib
 pylint
 pytest
