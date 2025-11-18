@@ -130,39 +130,3 @@ CREATE TABLE IF NOT EXISTS test.parcours (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS app.course (
-    id_activite INT PRIMARY KEY REFERENCES app.activite(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
-    denivele NUMERIC(6,2),
-    vitesse_minkm DECIMAL(4,2)
-);
-
-CREATE TABLE IF NOT EXISTS test.course (
-    id_activite INT PRIMARY KEY REFERENCES app.activite(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
-    denivele NUMERIC(6,2),
-    vitesse_minkm DECIMAL(4,2)
-);
-
-CREATE TABLE IF NOT EXISTS app.cyclisme (
-    id_activite INT PRIMARY KEY REFERENCES app.activite(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
-    denivele NUMERIC(6,2),
-    vitesse_minkm DECIMAL(5,2)
-);
-
-CREATE TABLE IF NOT EXISTS test.cyclisme (
-    id_activite INT PRIMARY KEY REFERENCES app.activite(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
-    denivele NUMERIC(6,2),
-    vitesse_minkm DECIMAL(5,2)
-);
-
-CREATE TABLE IF NOT EXISTS app.natation (
-    id_activite INT PRIMARY KEY REFERENCES app.activite(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
-    denivele NUMERIC(6,2),
-    vitesse_minkm DECIMAL(4,2)
-);
-
-CREATE TABLE IF NOT EXISTS test.natation (
-    id_activite INT PRIMARY KEY REFERENCES app.activite(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
-    denivele NUMERIC(6,2),
-    vitesse_minkm DECIMAL(4,2)
-);
-

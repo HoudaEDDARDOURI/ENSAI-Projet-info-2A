@@ -9,23 +9,25 @@ class CommentaireDao(metaclass=Singleton):
     """Classe contenant les méthodes pour accéder aux commentaires de la base de données"""
 
     def creer(self, commentaire: Commentaire) -> bool:
-        """Crée un nouveau commentaire dans la base."""
+        """
+        Crée un nouveau commentaire dans la base.
+        created_at est géré automatiquement par la BD (DEFAULT CURRENT_TIMESTAMP)
+        """
         try:
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
                         """
                         INSERT INTO commentaire (
-                            contenu, date, id_user, id_activite
+                            contenu, id_user, id_activite
                         )
                         VALUES (
-                            %(contenu)s, %(date)s, %(id_user)s, %(id_activite)s
+                            %(contenu)s, %(id_user)s, %(id_activite)s
                         )
-                        RETURNING id_commentaire;
+                        RETURNING id_commentaire, created_at;
                         """,
                         {
                             "contenu": commentaire.contenu,
-                            "date": commentaire.date,
                             "id_user": commentaire.id_user,
                             "id_activite": commentaire.id_activite,
                         },
@@ -33,6 +35,7 @@ class CommentaireDao(metaclass=Singleton):
                     res = cursor.fetchone()
                     if res:
                         commentaire.id_commentaire = res["id_commentaire"]
+                        commentaire.created_at = res["created_at"]  # Récupérer created_at de la BD
                         return True
         except psycopg2.Error as e:
             logging.error(f"Erreur SQL (CREATE commentaire) : {e.pgerror or e}")
@@ -51,7 +54,7 @@ class CommentaireDao(metaclass=Singleton):
                         SELECT *
                         FROM commentaire
                         WHERE id_activite = %(id_activite)s
-                        ORDER BY date ASC;  -- optionnel : trier par date
+                        ORDER BY created_at ASC;
                         """,
                         {"id_activite": id_activite},
                     )
@@ -61,7 +64,7 @@ class CommentaireDao(metaclass=Singleton):
                             Commentaire(
                                 id_commentaire=res["id_commentaire"],
                                 contenu=res["contenu"],
-                                date=res["date"],
+                                created_at=res["created_at"],
                                 id_user=res["id_user"],
                                 id_activite=res["id_activite"],
                             )
@@ -73,22 +76,22 @@ class CommentaireDao(metaclass=Singleton):
         return commentaires
 
     def modifier(self, commentaire: Commentaire) -> bool:
-        """Met à jour le contenu ou la date d’un commentaire existant."""
+        """
+        Met à jour le contenu d'un commentaire existant.
+        created_at n'est pas modifiable.
+        """
         try:
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
                         """
                         UPDATE commentaire
-                        SET
-                            contenu = %(contenu)s,
-                            date = %(date)s
+                        SET contenu = %(contenu)s
                         WHERE id_commentaire = %(id_commentaire)s;
                         """,
                         {
                             "id_commentaire": commentaire.id_commentaire,
                             "contenu": commentaire.contenu,
-                            "date": commentaire.date,
                         },
                     )
                     return cursor.rowcount > 0
@@ -113,3 +116,30 @@ class CommentaireDao(metaclass=Singleton):
         except Exception:
             logging.exception("Erreur inattendue (DELETE commentaire)")
         return False
+    
+    def compter_commentaires(self, id_activite: int) -> int:
+        """
+        Compte le nombre de commentaires pour une activité.
+        
+        Parameters:
+        - id_activite: ID de l'activité
+        
+        Returns:
+        - Nombre de commentaires
+        """
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        SELECT COUNT(*) as count
+                        FROM commentaire
+                        WHERE id_activite = %(id_activite)s;
+                        """,
+                        {"id_activite": id_activite}
+                    )
+                    res = cursor.fetchone()
+                    return res["count"] if res else 0
+        except Exception as e:
+            logging.error(f"Erreur lors du comptage des commentaires pour l'activité {id_activite}: {e}")
+            return 0

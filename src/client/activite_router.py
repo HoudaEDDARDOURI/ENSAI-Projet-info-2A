@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form
 from pydantic import BaseModel
 from typing import List, Optional
 from service.activite_service import ActiviteService
@@ -135,3 +135,180 @@ def supprimer_activite(id_activite: int, current_user=Depends(get_current_user))
     ok = activite_service.supprimer_activite(id_activite)
     if not ok:
         raise HTTPException(status_code=400, detail="Erreur suppression activité")
+
+# ═══════════════════════════════════════════
+# LIKES
+# ═══════════════════════════════════════════
+
+@activite_router.post("/{id_activite}/like")
+def liker_activite(
+    id_activite: int, 
+    current_user=Depends(get_current_user)
+):
+    """
+    Liker une activité.
+    """
+    success = activite_service.ajouter_like(id_activite, current_user.id_user)
+    
+    if success:
+        return {
+            "message": "Activité likée avec succès",
+            "likes_count": activite_service.compter_likes(id_activite)
+        }
+    else:
+        raise HTTPException(
+            status_code=400, 
+            detail="Vous avez déjà liké cette activité ou une erreur s'est produite"
+        )
+
+
+@activite_router.delete("/{id_activite}/like")
+def unliker_activite(
+    id_activite: int, 
+    current_user=Depends(get_current_user)
+):
+    """
+    Retirer son like d'une activité.
+    """
+    success = activite_service.retirer_like(id_activite, current_user.id_user)
+    
+    if success:
+        return {
+            "message": "Like retiré avec succès",
+            "likes_count": activite_service.compter_likes(id_activite)
+        }
+    else:
+        raise HTTPException(
+            status_code=400, 
+            detail="Vous n'avez pas liké cette activité"
+        )
+
+
+@activite_router.get("/{id_activite}/likes")
+def get_likes_activite(
+    id_activite: int,
+    current_user=Depends(get_current_user)
+):
+    """
+    Récupère tous les likes d'une activité.
+    """
+    likes = activite_service.get_likes_activite(id_activite)
+    user_a_like = activite_service.user_a_like(id_activite, current_user.id_user)
+    
+    return {
+        "likes": [
+            {
+                "id_like": like.id_like,
+                "id_user": like.id_user,
+                "created_at": like.created_at.isoformat() if like.created_at else None
+            }
+            for like in likes
+        ],
+        "count": len(likes),
+        "user_has_liked": user_a_like
+    }
+
+
+# ═══════════════════════════════════════════
+# COMMENTAIRES
+# ═══════════════════════════════════════════
+
+@activite_router.post("/{id_activite}/commentaire")
+def ajouter_commentaire(
+    id_activite: int,
+    contenu: str = Form(...),
+    current_user=Depends(get_current_user)
+):
+    """
+    Ajouter un commentaire à une activité.
+    """
+    commentaire = activite_service.ajouter_commentaire(
+        id_activite, 
+        current_user.id_user, 
+        contenu
+    )
+    
+    if commentaire:
+        return {
+            "message": "Commentaire ajouté avec succès",
+            "commentaire": {
+                "id_commentaire": commentaire.id_commentaire,
+                "contenu": commentaire.contenu,
+                "date": commentaire.created_at.isoformat() if commentaire.created_at else None,
+                "id_user": commentaire.id_user,
+                "username": current_user.username
+            },
+            "comments_count": activite_service.compter_commentaires(id_activite)
+        }
+    else:
+        raise HTTPException(
+            status_code=400, 
+            detail="Erreur lors de l'ajout du commentaire"
+        )
+
+
+@activite_router.delete("/commentaire/{id_commentaire}")
+def supprimer_commentaire(
+    id_commentaire: int,
+    current_user=Depends(get_current_user)
+):
+    """
+    Supprimer un commentaire (uniquement par son auteur).
+    """
+    success = activite_service.supprimer_commentaire(
+        id_commentaire, 
+        current_user.id_user
+    )
+    
+    if success:
+        return {"message": "Commentaire supprimé avec succès"}
+    else:
+        raise HTTPException(
+            status_code=400, 
+            detail="Erreur lors de la suppression du commentaire"
+        )
+
+
+@activite_router.get("/{id_activite}/commentaires")
+def get_commentaires_activite(
+    id_activite: int,
+    current_user=Depends(get_current_user)
+):
+    """
+    Récupère tous les commentaires d'une activité.
+    """
+    commentaires = activite_service.get_commentaires_activite(id_activite)
+    
+    return {
+        "commentaires": [
+            {
+                "id_commentaire": com.id_commentaire,
+                "contenu": com.contenu,
+                "created_at": com.created_at.isoformat() if com.created_at else None,
+                "id_user": com.id_user
+                # TODO: Ajouter username en faisant un join ou un appel à UserService
+            }
+            for com in commentaires
+        ],
+        "count": len(commentaires)
+    }
+
+
+# ═══════════════════════════════════════════
+# STATISTIQUES D'UNE ACTIVITÉ
+# ═══════════════════════════════════════════
+
+@activite_router.get("/{id_activite}/stats")
+def get_stats_activite(
+    id_activite: int,
+    current_user=Depends(get_current_user)
+):
+    """
+    Récupère les statistiques d'interactions d'une activité.
+    """
+    return {
+        "id_activite": id_activite,
+        "likes_count": activite_service.compter_likes(id_activite),
+        "comments_count": activite_service.compter_commentaires(id_activite),
+        "user_has_liked": activite_service.user_a_like(id_activite, current_user.id_user)
+    }

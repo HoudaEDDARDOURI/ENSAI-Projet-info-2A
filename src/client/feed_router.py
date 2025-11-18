@@ -10,7 +10,6 @@ feed_router = APIRouter(
     tags=["feed"]
 )
 
-
 @feed_router.get("/")
 def get_feed(
     limit: int = 20,
