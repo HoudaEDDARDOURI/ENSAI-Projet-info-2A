@@ -70,21 +70,19 @@ class StatistiqueService():
         pendant la semaine où se situe la date_reference.
         """
         date_debut_semaine, date_fin_semaine = self._get_bornes_semaine(date_reference)
-
         total_duree_minutes = 0.0
         for activite in self.user.activites:
 
             if self._safe_date_comparison(activite.date, date_debut_semaine, date_fin_semaine):
 
-                duree_value = activite.duree if activite.duree is not None else ""
+                if isinstance(activite.duree, timedelta):
 
-                duree_en_minutes = self._convertir_duree_vers_minutes(duree_value)
-                total_duree_minutes += duree_en_minutes
+                    total_duree_minutes += activite.duree.total_seconds() / 60
 
         return total_duree_minutes
 
-    def _convertir_duree_vers_minutes(self, duree_str: str) -> float:
-        """Convertit une durée de HH:MM:SS en minutes (float)."""
+    """def _convertir_duree_vers_minutes(self, duree_str: str) -> float:
+        """"""Convertit une durée de HH:MM:SS en minutes (float).""""""
         if not duree_str:
             return 0.0
 
@@ -98,7 +96,7 @@ class StatistiqueService():
                 # Tente de convertir directement si ce n'est pas HH:MM:SS
                 return float(duree_str) 
             except (ValueError, TypeError):
-                return 0.0  # Retourne 0 si la conversion échoue
+                return 0.0  # Retourne 0 si la conversion échoue"""
 
     def calculer_kilometres_par_semaine(self, date_reference):
         """
@@ -255,49 +253,55 @@ class StatistiqueService():
         """
         Arrondit la distance selon le sport.
 
-        Parameters:
-            distance (float): Distance brute
-            type_sport (str): Type de sport
-
-        Returns:
-            float: Distance arrondie
+        ATTENTION: Assurez-vous que la 'distance' reçue est toujours en KM,
+        conformément à votre stockage BDD.
         """
         if type_sport.lower() == 'natation':
-            # Arrondir à 50m près
-            return round(distance * 20) / 20
+            distance_en_m = distance * 1000
+            # Arrondi à 50m près
+            distance_arrondie_m = round(distance_en_m / 50) * 50
+            return distance_arrondie_m 
+
         elif type_sport.lower() == 'cyclisme':
-            # Arrondir au km près
+            # Arrondi au km près
             return round(distance)
         else:
-            # Arrondir à 0.5 km près
+            # Arrondi à 0.5 km près
             return round(distance * 2) / 2
+
+    def _formater_duree(self, total_minutes: float) -> str:
+        """Convertit le temps total en minutes (float) en une chaîne formatée (HHh MMmin SSs)."""
+        if total_minutes is None or total_minutes < 0:
+            return "00h 00min 00s"
+
+        total_secondes = int(total_minutes * 60)
+
+        heures = total_secondes // 3600
+        total_secondes %= 3600
+
+        minutes = total_secondes // 60
+        secondes = total_secondes % 60
+
+        return f"{heures:02}h {minutes:02}min {secondes:02}s"
 
     def afficherStats(self, date_reference: date) -> dict:
         """
-        Retourne les statistiques hebdomadaires de l'utilisateur :
-        - nombre d'activités,
-        - temps total de sport,
-        - distance totale parcourue.
-
-        Parameters:
-            date_reference (date): Une date appartenant à la semaine étudiée.
-
-        Returns:
-            dict: Résumé des statistiques hebdomadaires.
+        Retourne les statistiques hebdomadaires de l'utilisateur.
         """
         if not isinstance(date_reference, date):
             raise TypeError("date_reference doit être un objet datetime.date")
 
         nb_activites = self.get_nombre_services_semaine(date_reference)
-        temps_total = self.calculer_temps_sport_par_semaine(date_reference)
+        temps_total_minutes = self.calculer_temps_sport_par_semaine(date_reference)
         distance_totale = self.calculer_kilometres_par_semaine(date_reference)
+        temps_total_formatte = self._formater_duree(temps_total_minutes)
 
         return {
             "Utilisateur": self.user.username,
             "Période": self._get_bornes_semaine(date_reference),
             "Statistiques": {
                 "Nombre d'activités": nb_activites,
-                "Temps total d'activité en minutes": round(temps_total, 2),
+                "Temps total d'activité": temps_total_formatte,
                 "Distance totale en kilomètres": round(distance_totale, 2)
             }
         }

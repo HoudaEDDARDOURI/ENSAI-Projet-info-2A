@@ -133,11 +133,18 @@ def statistiques_page():
             response_pred = requests.get(endpoint_pred, params=params_pred)
             response_pred.raise_for_status()
 
-            prediction_km = response_pred.json().get("distance_recommandee")
+            prediction_value = response_pred.json().get("distance_recommandee") 
+            # Changement de nom de variable pour clarté
 
             # Affichage résultat
             unite = "m" if sport_choisi == "Natation" else "km"
-            distance_affichage = f"{prediction_km:,.1f}" if sport_choisi == "Natation" else f"{prediction_km:,.1f}"
+
+            if sport_choisi == "Natation":
+                # Si la valeur est en mètres (1100), on affiche sans décimale.
+                distance_affichage = f"{prediction_value:,.0f}"
+            else:
+                # Pour les KM, on garde une décimale.
+                distance_affichage = f"{prediction_value:,.1f}"
 
             st.success(
                 f"🎉 Distance recommandée pour votre prochaine séance de **{sport_choisi}** : **{distance_affichage} {unite}**"

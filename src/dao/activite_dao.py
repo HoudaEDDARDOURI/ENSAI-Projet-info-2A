@@ -9,6 +9,7 @@ from business_object.cyclisme import Cyclisme
 from business_object.user import User
 from utils.singleton import Singleton
 from typing import List
+from datetime import timedelta
 
 
 class ActiviteDao(metaclass=Singleton):
@@ -56,6 +57,7 @@ class ActiviteDao(metaclass=Singleton):
             created = True
 
         return created
+
     def lire(self, id_activite: int) -> Activite:
         """Récupère une activité par son ID."""
         try:
@@ -73,6 +75,7 @@ class ActiviteDao(metaclass=Singleton):
 
                     if result:
                         type_sport = result["type_sport"].lower()
+                        duree_td = result["duree"] if result["duree"] is not None else timedelta(0)
 
                         # Sélectionner la sous-classe en fonction du type de sport
                         if type_sport == "course":
@@ -81,7 +84,7 @@ class ActiviteDao(metaclass=Singleton):
                                 id_user=result["id_user"],
                                 date=result["date_activite"],
                                 distance=result["distance"],
-                                duree=result["duree"],
+                                duree=duree_td,
                                 trace=result["trace"],
                                 titre=result["titre"],
                                 description=result["description"],
@@ -93,7 +96,7 @@ class ActiviteDao(metaclass=Singleton):
                                 id_user=result["id_user"],
                                 date=result["date_activite"],
                                 distance=result["distance"],
-                                duree=result["duree"],
+                                duree=duree_td,
                                 trace=result["trace"],
                                 titre=result["titre"],
                                 description=result["description"],
@@ -105,7 +108,7 @@ class ActiviteDao(metaclass=Singleton):
                                 id_user=result["id_user"],
                                 date=result["date_activite"],
                                 distance=result["distance"],
-                                duree=result["duree"],
+                                duree=duree_td,
                                 trace=result["trace"],
                                 titre=result["titre"],
                                 description=result["description"],
@@ -144,6 +147,7 @@ class ActiviteDao(metaclass=Singleton):
 
                     for res in results:
                         type_sport = res["type_sport"].lower()
+                        duree_td = res["duree"] if res["duree"] is not None else timedelta(0)
 
                         # Sélectionner la sous-classe en fonction du type de sport
                         if type_sport == "course":
@@ -153,7 +157,7 @@ class ActiviteDao(metaclass=Singleton):
                                     id_user=res["id_user"],
                                     date=res["date_activite"],
                                     distance=res["distance"],
-                                    duree=res["duree"],
+                                    duree=duree_td,
                                     trace=res["trace"],
                                     titre=res["titre"],
                                     description=res["description"],
@@ -167,7 +171,7 @@ class ActiviteDao(metaclass=Singleton):
                                     id_user=res["id_user"],
                                     date=res["date_activite"],
                                     distance=res["distance"],
-                                    duree=res["duree"],
+                                    duree=duree_td,
                                     trace=res["trace"],
                                     titre=res["titre"],
                                     description=res["description"],
@@ -181,7 +185,7 @@ class ActiviteDao(metaclass=Singleton):
                                     id_user=res["id_user"],
                                     date=res["date_activite"],
                                     distance=res["distance"],
-                                    duree=res["duree"],
+                                    duree=duree_td,
                                     trace=res["trace"],
                                     titre=res["titre"],
                                     description=res["description"],
@@ -198,13 +202,12 @@ class ActiviteDao(metaclass=Singleton):
 
         return activites
 
-
     def modifier(self, activite: Activite) -> bool:
         """Met à jour les informations d’une activité existante."""
         if activite.id_activite is None:
             logging.error("L'ID de l'activité est nécessaire pour la modification.")
             return False
-        
+
         try:
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
