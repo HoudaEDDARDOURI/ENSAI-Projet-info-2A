@@ -22,6 +22,18 @@ def extraire_info_gpx(fichier_gpx) -> Tuple[float, str]:
         st.error(f"Impossible de parser le GPX: {e}")
         return 0.0, ""
 
+def extraire_info_gpx_depuis_contenu(contenu_gpx: str) -> Tuple[float, str]:
+    """Retourne (distance_km, duree_str) depuis le contenu GPX en string"""
+    try:
+        gpx = gpxpy.parse(contenu_gpx)
+        distance_km = round(gpx.length_3d() / 1000, 2)
+        duree_s = gpx.get_duration() or 0
+        duree_hms = str(datetime.utcfromtimestamp(int(duree_s)).time()) if duree_s else ""
+        return distance_km, duree_hms
+    except Exception as e:
+        st.error(f"Impossible de parser le contenu GPX: {e}")
+        return 0.0, ""
+
 def get_sport_emoji(type_sport: str) -> str:
     """Retourne un emoji selon le type de sport"""
     emojis = {"course": "🏃", "natation": "🏊", "cyclisme": "🚴"}
@@ -83,6 +95,7 @@ def activites_page():
             date_act = act.get("date", "")
             duree = act.get("duree", "N/A")
             description = act.get("description", "")
+            has_gpx = "✅" if act.get("trace") else "❌"
             try: date_formatted = datetime.fromisoformat(date_act).strftime("%d/%m/%Y")
             except: date_formatted = date_act
             emoji = get_sport_emoji(t_sport)
@@ -93,6 +106,7 @@ def activites_page():
                 "Distance (km)": f"{dist:.2f}",
                 "Durée": duree,
                 "Date": date_formatted,
+                "GPX": has_gpx,
                 "Description": description[:50] + "..." if len(description) > 50 else description
             })
         df = pd.DataFrame(data_tableau)
@@ -141,39 +155,55 @@ def activites_page():
 
         # --- Visualiser parcours ---
         with col3:
-            st.markdown("#### 🔍 Créer / Visualiser un parcours")
+            st.markdown("#### 🔍 Actions parcours")
             for act in activites_triees:
                 act_id = act.get("id_activite")
                 titre = act.get("titre", "Sans titre")
-                if st.button(f"🗺️ {titre}", key=f"parcours_{act_id}"):
-                    try:
-                        payload = {
-                            "depart": "",
-                            "arrivee": "",
-                            "id_user": st.session_state.user_id,
-                            "id_activite": act_id
-                        }
-                        response = requests.post(f"{API_URL}/parcours/", params=payload)
-                        response.raise_for_status()
-                        result = response.json()
-                        parcours_id_created = result.get("id_parcours")
-                        st.success(f"🎉 Parcours créé pour l'activité '{titre}' !")
+                trace_content = act.get("trace", "")
+                
+                col_parcours, col_download = st.columns(2)
+                
+                with col_parcours:
+                    if st.button(f"🗺️ {titre}", key=f"parcours_{act_id}"):
+                        try:
+                            payload = {
+                                "depart": "",
+                                "arrivee": "",
+                                "id_user": st.session_state.user_id,
+                                "id_activite": act_id
+                            }
+                            response = requests.post(f"{API_URL}/parcours/", params=payload)
+                            response.raise_for_status()
+                            result = response.json()
+                            parcours_id_created = result.get("id_parcours")
+                            st.success(f"🎉 Parcours créé pour l'activité '{titre}' !")
 
-                        if parcours_id_created:
-                            vis_response = requests.get(f"{API_URL}/parcours/{parcours_id_created}/visualiser")
-                            vis_response.raise_for_status()
-                            html_content = vis_response.json().get("html_content")
-                            if html_content:
-                                st.info("🗺️ Visualisation automatique du parcours")
-                                components.html(html_content, height=600, scrolling=True)
+                            if parcours_id_created:
+                                vis_response = requests.get(f"{API_URL}/parcours/{parcours_id_created}/visualiser")
+                                vis_response.raise_for_status()
+                                html_content = vis_response.json().get("html_content")
+                                if html_content:
+                                    st.info("🗺️ Visualisation automatique du parcours")
+                                    components.html(html_content, height=600, scrolling=True)
+                                else:
+                                    st.warning("Le parcours a été créé, mais le contenu HTML est vide.")
                             else:
-                                st.warning("Le parcours a été créé, mais le contenu HTML est vide.")
-                        else:
-                            st.warning("Le parcours a été créé, mais l'API n'a pas renvoyé d'ID.")
-                    except requests.exceptions.HTTPError as http_err:
-                        st.error(f"Erreur HTTP : {http_err.response.status_code} - {http_err.response.text}")
-                    except Exception as e:
-                        st.error(f"Erreur : {e}")
+                                st.warning("Le parcours a été créé, mais l'API n'a pas renvoyé d'ID.")
+                        except requests.exceptions.HTTPError as http_err:
+                            st.error(f"Erreur HTTP : {http_err.response.status_code} - {http_err.response.text}")
+                        except Exception as e:
+                            st.error(f"Erreur : {e}")
+                
+                with col_download:
+                    # Bouton de téléchargement du GPX si disponible
+                    if trace_content:
+                        st.download_button(
+                            label=f"⬇️ GPX",
+                            data=trace_content,
+                            file_name=f"{titre.replace(' ', '_')}_{act_id}.gpx",
+                            mime="application/gpx+xml",
+                            key=f"download_{act_id}"
+                        )
 
     st.markdown("---")
 
@@ -235,14 +265,17 @@ def activites_page():
                 st.error("⚠️ La distance doit être supérieure à 0")
             else:
                 try:
-                    # --- Upload GPX si présent ---
+                    # --- Upload GPX si présent et récupération du contenu ---
                     if fichier_gpx:
                         files = {"file": (fichier_gpx.name, fichier_gpx.getvalue())}
                         resp_upload = requests.post(f"{API_URL}/activites/upload_gpx/", files=files)
                         resp_upload.raise_for_status()
-                        trace_path = resp_upload.json()["file_path"]
+                        upload_result = resp_upload.json()
+                        # Récupérer le contenu GPX pour le stocker en base
+                        trace_content = upload_result.get("gpx_content", "")
                     else:
-                        trace_path = st.session_state.modif_data.get("trace", "") if st.session_state.modif_data else ""
+                        # Conserver le contenu existant en cas de modification sans nouveau fichier
+                        trace_content = st.session_state.modif_data.get("trace", "") if st.session_state.modif_data else ""
 
                     # --- Payload pour création / modification activité ---
                     payload = {
@@ -250,7 +283,7 @@ def activites_page():
                         "type_sport": type_sport.lower(),
                         "distance": distance,
                         "date": str(date_activite),
-                        "trace": trace_path,
+                        "trace": trace_content,  # Contenu GPX au lieu du chemin fichier
                         "description": description,  # Description ajoutée
                         "duree": duree,
                         "id_user": st.session_state.user_id
