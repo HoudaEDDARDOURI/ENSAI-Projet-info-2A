@@ -191,11 +191,6 @@ def feed_page():
                     st.metric("⚡ Vitesse moy.", f"{vitesse_moyenne:.1f} km/h")
                 else:
                     st.metric("⚡ Vitesse moy.", "N/A")
-            with cols[3]:
-                if denivele:
-                    st.metric("⛰️ Dénivelé", f"{denivele:.0f} m")
-                else:
-                    st.metric("⛰️ Dénivelé", "N/A")
             
             # Actions sur l'activité (likes, commentaires)
             act_id = act.get("id_activite")
