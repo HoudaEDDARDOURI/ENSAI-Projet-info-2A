@@ -26,9 +26,3 @@ class Course(Activite):
             self.vitesse_minkm = round(duree_minutes / self.distance, 2)
         return self.vitesse_minkm
 
-    def afficher_course(self):
-        vitesse_str = f"{self.vitesse_minkm:.2f}" if self.vitesse_minkm is not None else "N/A"
-        print(
-            f"Course: {self.titre}, Distance: {self.distance} km, "
-            f"Vitesse: {vitesse_str} min/km"
-        )

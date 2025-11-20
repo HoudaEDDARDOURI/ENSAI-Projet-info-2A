@@ -254,7 +254,6 @@ class ActiviteDao(metaclass=Singleton):
             logging.exception("Erreur inattendue lors de la modification de l'activité")
         return False
 
-
     def supprimer(self, id_activite: int) -> bool:
         """Supprime une activité."""
         try:
