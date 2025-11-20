@@ -20,7 +20,7 @@ class ActiviteSchema(BaseModel):
     duree: str
     trace: Optional[str] = None
     titre: Optional[str] = None
-    description: Optional[str] = None
+    description: Optional[str] = None  # Déjà présent
     id_user: int
 
 # ----------------- CREATION -----------------
@@ -48,7 +48,7 @@ def creer_activite(activite: ActiviteSchema, current_user=Depends(get_current_us
         duree=activite.duree,
         trace=activite.trace,
         titre=activite.titre,
-        description=activite.description,
+        description=activite.description,  # Description incluse
         id_user=current_user.id_user
     )
     if not a:
@@ -79,7 +79,7 @@ def get_user_activites(id_user: int, current_user=Depends(get_current_user)):
             duree=str(act.duree),
             trace=act.trace,
             titre=act.titre,
-            description=getattr(act, "description", ""),
+            description=getattr(act, "description", ""),  # Description incluse
             id_user=act.id_user
         )
         for act in activites
@@ -89,30 +89,51 @@ def get_user_activites(id_user: int, current_user=Depends(get_current_user)):
 @activite_router.put("/{id_activite}", response_model=ActiviteSchema)
 def modifier_activite(id_activite: int, activite: ActiviteSchema, current_user=Depends(get_current_user)):
     """Modifier une activité existante"""
-    # Création d'un objet concret
-    class ActiviteConcrète:
-        def __init__(self, id_activite, date, type_sport, distance, duree, trace, titre, description, id_user):
-            self.id_activite = id_activite
-            self.date = date
-            self.type_sport = type_sport
-            self.distance = distance
-            self.duree = duree
-            self.trace = trace
-            self.titre = titre
-            self.description = description
-            self.id_user = id_user
-
-    a = ActiviteConcrète(
-        id_activite=id_activite,
-        date=activite.date,
-        type_sport=activite.type_sport,
-        distance=activite.distance,
-        duree=activite.duree,
-        trace=activite.trace,
-        titre=activite.titre,
-        description=activite.description,
-        id_user=current_user.id_user
-    )
+    # Récupérer l'activité existante pour déterminer le type correct
+    from business_object.course import Course
+    from business_object.natation import Natation
+    from business_object.cyclisme import Cyclisme
+    
+    type_sport_lower = activite.type_sport.lower()
+    
+    if type_sport_lower == "course":
+        a = Course(
+            id_activite=id_activite,
+            date=activite.date,
+            distance=activite.distance,
+            duree=activite.duree,
+            trace=activite.trace,
+            titre=activite.titre,
+            description=activite.description,  # Description incluse
+            id_user=current_user.id_user,
+            denivele=0.0
+        )
+    elif type_sport_lower == "natation":
+        a = Natation(
+            id_activite=id_activite,
+            date=activite.date,
+            distance=activite.distance,
+            duree=activite.duree,
+            trace=activite.trace,
+            titre=activite.titre,
+            description=activite.description,  # Description incluse
+            id_user=current_user.id_user
+        )
+    elif type_sport_lower == "cyclisme":
+        a = Cyclisme(
+            id_activite=id_activite,
+            date=activite.date,
+            distance=activite.distance,
+            duree=activite.duree,
+            trace=activite.trace,
+            titre=activite.titre,
+            description=activite.description,  # Description incluse
+            id_user=current_user.id_user,
+            denivele=0.0
+        )
+    else:
+        raise HTTPException(status_code=400, detail=f"Type de sport inconnu : {activite.type_sport}")
+    
     ok = activite_service.modifier_activite(a)
     if not ok:
         raise HTTPException(status_code=400, detail="Erreur modification activité")
@@ -129,7 +150,7 @@ def modifier_activite(id_activite: int, activite: ActiviteSchema, current_user=D
     )
 
 # ----------------- SUPPRESSION -----------------
-@activite_router.delete("/{id_activite}", status_code="204")
+@activite_router.delete("/{id_activite}", status_code=204)
 def supprimer_activite(id_activite: int, current_user=Depends(get_current_user)):
     """Supprimer une activité"""
     ok = activite_service.supprimer_activite(id_activite)
@@ -137,64 +158,35 @@ def supprimer_activite(id_activite: int, current_user=Depends(get_current_user))
         raise HTTPException(status_code=400, detail="Erreur suppression activité")
 
 # ═══════════════════════════════════════════
-# LIKES
+# LIKES & COMMENTAIRES (inchangés)
 # ═══════════════════════════════════════════
 
 @activite_router.post("/{id_activite}/like")
-def liker_activite(
-    id_activite: int, 
-    current_user=Depends(get_current_user)
-):
-    """
-    Liker une activité.
-    """
+def liker_activite(id_activite: int, current_user=Depends(get_current_user)):
     success = activite_service.ajouter_like(id_activite, current_user.id_user)
-    
     if success:
         return {
             "message": "Activité likée avec succès",
             "likes_count": activite_service.compter_likes(id_activite)
         }
     else:
-        raise HTTPException(
-            status_code=400, 
-            detail="Vous avez déjà liké cette activité ou une erreur s'est produite"
-        )
-
+        raise HTTPException(status_code=400, detail="Vous avez déjà liké cette activité")
 
 @activite_router.delete("/{id_activite}/like")
-def unliker_activite(
-    id_activite: int, 
-    current_user=Depends(get_current_user)
-):
-    """
-    Retirer son like d'une activité.
-    """
+def unliker_activite(id_activite: int, current_user=Depends(get_current_user)):
     success = activite_service.retirer_like(id_activite, current_user.id_user)
-    
     if success:
         return {
             "message": "Like retiré avec succès",
             "likes_count": activite_service.compter_likes(id_activite)
         }
     else:
-        raise HTTPException(
-            status_code=400, 
-            detail="Vous n'avez pas liké cette activité"
-        )
-
+        raise HTTPException(status_code=400, detail="Vous n'avez pas liké cette activité")
 
 @activite_router.get("/{id_activite}/likes")
-def get_likes_activite(
-    id_activite: int,
-    current_user=Depends(get_current_user)
-):
-    """
-    Récupère tous les likes d'une activité.
-    """
+def get_likes_activite(id_activite: int, current_user=Depends(get_current_user)):
     likes = activite_service.get_likes_activite(id_activite)
     user_a_like = activite_service.user_a_like(id_activite, current_user.id_user)
-    
     return {
         "likes": [
             {
@@ -208,26 +200,9 @@ def get_likes_activite(
         "user_has_liked": user_a_like
     }
 
-
-# ═══════════════════════════════════════════
-# COMMENTAIRES
-# ═══════════════════════════════════════════
-
 @activite_router.post("/{id_activite}/commentaire")
-def ajouter_commentaire(
-    id_activite: int,
-    contenu: str = Form(...),
-    current_user=Depends(get_current_user)
-):
-    """
-    Ajouter un commentaire à une activité.
-    """
-    commentaire = activite_service.ajouter_commentaire(
-        id_activite, 
-        current_user.id_user, 
-        contenu
-    )
-    
+def ajouter_commentaire(id_activite: int, contenu: str = Form(...), current_user=Depends(get_current_user)):
+    commentaire = activite_service.ajouter_commentaire(id_activite, current_user.id_user, contenu)
     if commentaire:
         return {
             "message": "Commentaire ajouté avec succès",
@@ -241,44 +216,19 @@ def ajouter_commentaire(
             "comments_count": activite_service.compter_commentaires(id_activite)
         }
     else:
-        raise HTTPException(
-            status_code=400, 
-            detail="Erreur lors de l'ajout du commentaire"
-        )
-
+        raise HTTPException(status_code=400, detail="Erreur lors de l'ajout du commentaire")
 
 @activite_router.delete("/commentaire/{id_commentaire}")
-def supprimer_commentaire(
-    id_commentaire: int,
-    current_user=Depends(get_current_user)
-):
-    """
-    Supprimer un commentaire (uniquement par son auteur).
-    """
-    success = activite_service.supprimer_commentaire(
-        id_commentaire, 
-        current_user.id_user
-    )
-    
+def supprimer_commentaire(id_commentaire: int, current_user=Depends(get_current_user)):
+    success = activite_service.supprimer_commentaire(id_commentaire, current_user.id_user)
     if success:
         return {"message": "Commentaire supprimé avec succès"}
     else:
-        raise HTTPException(
-            status_code=400, 
-            detail="Erreur lors de la suppression du commentaire"
-        )
-
+        raise HTTPException(status_code=400, detail="Erreur lors de la suppression du commentaire")
 
 @activite_router.get("/{id_activite}/commentaires")
-def get_commentaires_activite(
-    id_activite: int,
-    current_user=Depends(get_current_user)
-):
-    """
-    Récupère tous les commentaires d'une activité.
-    """
+def get_commentaires_activite(id_activite: int, current_user=Depends(get_current_user)):
     commentaires = activite_service.get_commentaires_activite(id_activite)
-    
     return {
         "commentaires": [
             {
@@ -286,26 +236,14 @@ def get_commentaires_activite(
                 "contenu": com.contenu,
                 "created_at": com.created_at.isoformat() if com.created_at else None,
                 "id_user": com.id_user
-                # TODO: Ajouter username en faisant un join ou un appel à UserService
             }
             for com in commentaires
         ],
         "count": len(commentaires)
     }
 
-
-# ═══════════════════════════════════════════
-# STATISTIQUES D'UNE ACTIVITÉ
-# ═══════════════════════════════════════════
-
 @activite_router.get("/{id_activite}/stats")
-def get_stats_activite(
-    id_activite: int,
-    current_user=Depends(get_current_user)
-):
-    """
-    Récupère les statistiques d'interactions d'une activité.
-    """
+def get_stats_activite(id_activite: int, current_user=Depends(get_current_user)):
     return {
         "id_activite": id_activite,
         "likes_count": activite_service.compter_likes(id_activite),

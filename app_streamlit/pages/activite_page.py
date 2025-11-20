@@ -82,6 +82,7 @@ def activites_page():
             dist = act.get("distance", 0.0)
             date_act = act.get("date", "")
             duree = act.get("duree", "N/A")
+            description = act.get("description", "")
             try: date_formatted = datetime.fromisoformat(date_act).strftime("%d/%m/%Y")
             except: date_formatted = date_act
             emoji = get_sport_emoji(t_sport)
@@ -91,7 +92,8 @@ def activites_page():
                 "Titre": title,
                 "Distance (km)": f"{dist:.2f}",
                 "Durée": duree,
-                "Date": date_formatted
+                "Date": date_formatted,
+                "Description": description[:50] + "..." if len(description) > 50 else description
             })
         df = pd.DataFrame(data_tableau)
         st.dataframe(df.drop('ID', axis=1), use_container_width=True, hide_index=True)
@@ -128,7 +130,7 @@ def activites_page():
                         try:
                             del_resp = requests.delete(f"{API_URL}/activites/{act_id}",
                                                        auth=st.session_state.auth, timeout=10)
-                            if del_resp.status_code == 200:
+                            if del_resp.status_code in [200, 204]:
                                 st.success("✅ Activité supprimée")
                                 st.rerun()
                             else:
@@ -137,7 +139,7 @@ def activites_page():
                         except Exception as e:
                             st.error(f"❌ Erreur suppression: {e}")
 
-        # --- Visualiser parcours directement depuis l'activité ---
+        # --- Visualiser parcours ---
         with col3:
             st.markdown("#### 🔍 Créer / Visualiser un parcours")
             for act in activites_triees:
@@ -151,21 +153,16 @@ def activites_page():
                             "id_user": st.session_state.user_id,
                             "id_activite": act_id
                         }
-
-                        # Création du parcours via l'API
                         response = requests.post(f"{API_URL}/parcours/", params=payload)
                         response.raise_for_status()
                         result = response.json()
                         parcours_id_created = result.get("id_parcours")
-
                         st.success(f"🎉 Parcours créé pour l'activité '{titre}' !")
 
-                        # Visualisation
                         if parcours_id_created:
                             vis_response = requests.get(f"{API_URL}/parcours/{parcours_id_created}/visualiser")
                             vis_response.raise_for_status()
                             html_content = vis_response.json().get("html_content")
-
                             if html_content:
                                 st.info("🗺️ Visualisation automatique du parcours")
                                 components.html(html_content, height=600, scrolling=True)
@@ -173,7 +170,6 @@ def activites_page():
                                 st.warning("Le parcours a été créé, mais le contenu HTML est vide.")
                         else:
                             st.warning("Le parcours a été créé, mais l'API n'a pas renvoyé d'ID.")
-
                     except requests.exceptions.HTTPError as http_err:
                         st.error(f"Erreur HTTP : {http_err.response.status_code} - {http_err.response.text}")
                     except Exception as e:
@@ -190,6 +186,7 @@ def activites_page():
         date_default = datetime.fromisoformat(modif_data.get("date")).date() if modif_data.get("date") else datetime.today().date()
         distance_default = float(modif_data.get("distance", 0.0))
         duree_default = modif_data.get("duree", "")
+        description_default = modif_data.get("description", "")
         if st.button("❌ Annuler la modification"):
             st.session_state.modif_id = None
             st.session_state.modif_data = {}
@@ -201,6 +198,7 @@ def activites_page():
         date_default = datetime.today().date()
         distance_default = 0.0
         duree_default = ""
+        description_default = ""
 
     with st.container():
         col1, col2 = st.columns(2)
@@ -218,6 +216,15 @@ def activites_page():
             else:
                 distance = st.number_input("📏 Distance (km)", min_value=0.0, value=distance_default, step=0.1)
                 duree = st.text_input("⏱️ Durée (HH:MM:SS)", value=duree_default or "")
+        
+        # Champ Description sur toute la largeur
+        description = st.text_area(
+            "📄 Description (optionnelle)", 
+            value=description_default,
+            placeholder="Décrivez votre activité, vos sensations, le parcours...",
+            height=100,
+            help="Ajoutez des détails sur votre activité"
+        )
 
     col1, col2 = st.columns([1,1])
     with col1:
@@ -244,7 +251,7 @@ def activites_page():
                         "distance": distance,
                         "date": str(date_activite),
                         "trace": trace_path,
-                        "description": st.session_state.modif_data.get("description", "") if st.session_state.modif_data else "",
+                        "description": description,  # Description ajoutée
                         "duree": duree,
                         "id_user": st.session_state.user_id
                     }
