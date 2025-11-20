@@ -33,10 +33,25 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @activite_router.post("/upload_gpx/")
 def upload_gpx(file: UploadFile = File(...)):
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
-    with open(file_path, "wb") as f:
-        f.write(file.file.read())
-    return {"file_path": file_path}
+    """Upload un fichier GPX et retourne son contenu"""
+    try:
+        # Lire le contenu du fichier
+        content = file.file.read()
+        
+        # Optionnel : sauvegarder aussi sur disque
+        file_path = os.path.join(UPLOAD_DIR, file.filename)
+        with open(file_path, "wb") as f:
+            f.write(content)
+        
+        # Retourner le contenu en string pour stockage en base
+        gpx_content = content.decode('utf-8')
+        
+        return {
+            "file_path": file_path,
+            "gpx_content": gpx_content
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erreur lecture GPX: {str(e)}")
 
 @activite_router.post("/", response_model=ActiviteSchema)
 def creer_activite(activite: ActiviteSchema, current_user=Depends(get_current_user)):
