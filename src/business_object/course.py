@@ -17,7 +17,7 @@ class Course(Activite):
                          description=description)
         self.vitesse_minkm = None
 
-    def calculer_vitesse_course(self) -> float:
+    def calculer_vitesse(self) -> float:
         """Calcule la vitesse moyenne en minutes par km."""
         if self.distance <= 0 or self.duree.total_seconds() <= 0:
             self.vitesse_minkm = 0.0
@@ -26,12 +26,3 @@ class Course(Activite):
             self.vitesse_minkm = round(duree_minutes / self.distance, 2)
         return self.vitesse_minkm
 
-    def afficher_course(self):
-        vitesse_str = f"{self.vitesse_minkm:.2f}" if self.vitesse_minkm is not None else "N/A"
-        print(
-            f"Course: {self.titre}, Distance: {self.distance} km, "
-        )
-
-    def afficher_details(self):
-        self.calculer_vitesse_course()
-        self.afficher_course()

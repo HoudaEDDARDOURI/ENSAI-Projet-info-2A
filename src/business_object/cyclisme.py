@@ -17,15 +17,11 @@ class Cyclisme(Activite):
                          description=description)
         self.vitesse_kmh = None
 
-    def afficher_details(self):
-        print(f"Cyclisme: {self.titre}, Distance: {self.distance} km, Vitesse: {self.vitesse_kmh}"
-              "km/h")
-              
-    def calculer_vitesse_cyclisme(self) -> float:
+    def calculer_vitesse(self) -> float:
         """Calcule la vitesse moyenne du cycliste en km/h."""
         duree_heures = self.duree.total_seconds() / 3600  # convertir la durée en heures
         if duree_heures > 0:
             self.vitesse_kmh = round(self.distance / duree_heures, 2)
         else:
             self.vitesse_kmh = 0.0
-        return self.vitesse_kmh         
+        return self.vitesse_kmh

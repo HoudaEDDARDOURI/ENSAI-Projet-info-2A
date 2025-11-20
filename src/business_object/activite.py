@@ -1,8 +1,8 @@
 from __future__ import annotations
 from datetime import date, timedelta
 from abc import ABC, abstractmethod
- 
- 
+
+# ================= Classe abstraite =================
 class Activite(ABC):
     def __init__(self, id_user: int, date: date, type_sport: str, distance: float, duree: timedelta,
                  trace: str, titre: str, description: str,
@@ -18,23 +18,16 @@ class Activite(ABC):
         self.description = description
 
     @abstractmethod
-    def afficher_details(self):
+    def calculer_vitesse(self) -> float:
+        """Méthode abstraite pour calculer la vitesse"""
         pass
 
-
-# Sous-classe concrète
-
+# ================= Classe concrète =================
 class ActiviteConcrète(Activite):
-    def afficher_details(self):
-        # Par exemple retourne un dict des attributs
-        return {
-            "id_activite": self.id_activite,
-            "date": self.date,
-            "type_sport": self.type_sport,
-            "distance": self.distance,
-            "duree": self.duree,
-            "trace": self.trace,
-            "titre": self.titre,
-            "description": self.description,
-            "id_user": self.id_user
-        }
+    def calculer_vitesse(self) -> float:
+        """Exemple de calcul de vitesse : minutes par km pour un sport terrestre"""
+        if self.distance <= 0 or self.duree.total_seconds() <= 0:
+            return 0.0
+        duree_minutes = self.duree.total_seconds() / 60
+        vitesse_minkm = round(duree_minutes / self.distance, 2)
+        return vitesse_minkm

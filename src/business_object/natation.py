@@ -18,7 +18,7 @@ class Natation(Activite):
         self.denivele = denivele
         self.vitesse_min100m = None  # reste None jusqu'au calcul
 
-    def calculer_vitesse_natation(self) -> float:
+    def calculer_vitesse(self) -> float:
         """
         Calcule la vitesse moyenne de la natation en minutes par 100 mètres.
         :return: vitesse en minutes pour 100 mètres
@@ -32,9 +32,3 @@ class Natation(Activite):
             vitesse_100m = (duree_minutes / self.distance) * 100
             self.vitesse_min100m = round(vitesse_100m, 2)
         return self.vitesse_min100m
-
-    def afficher_details(self):
-        # Gérer le cas où la vitesse n'a pas encore été calculée
-        vitesse_str = f"{self.vitesse_min100m:.2f}" if self.vitesse_min100m is not None else "N/A"
-        print(f"Natation: {self.titre}, Distance: {self.distance} m, "
-              f"Vitesse: {vitesse_str} min/100m")
