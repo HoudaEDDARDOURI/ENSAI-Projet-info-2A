@@ -1,5 +1,6 @@
 import logging
 import psycopg2
+import psycopg2.extras
 from typing import List
 from dao.db_connection import DBConnection
 from business_object.activite import Activite
@@ -9,7 +10,7 @@ from business_object.cyclisme import Cyclisme
 from business_object.user import User
 from utils.singleton import Singleton
 from typing import List
-from datetime import timedelta
+from datetime import timedelta, time
 
 
 class ActiviteDao(metaclass=Singleton):
@@ -128,12 +129,12 @@ class ActiviteDao(metaclass=Singleton):
         return None
 
     def lire_activites_par_user(self, id_user: int) -> List[Activite]:
-        """Récupère toutes les activités d'un utilisateur par son ID."""
+        """Récupère toutes les activités d'un utilisateur par son ID avec durée convertie en timedelta."""
         activites: List[Activite] = []
 
         try:
             with DBConnection().connection as connection:
-                with connection.cursor() as cursor:
+                with connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
                     cursor.execute(
                         """
                         SELECT *
@@ -147,53 +148,64 @@ class ActiviteDao(metaclass=Singleton):
 
                     for res in results:
                         type_sport = res["type_sport"].lower()
-                        duree_td = res["duree"] if res["duree"] is not None else timedelta(0)
+                        duree_val = res["duree"]
 
-                        # Sélectionner la sous-classe en fonction du type de sport
+                        # Conversion TIME -> timedelta
+                        if isinstance(duree_val, timedelta):
+                            duree_td = duree_val
+                        elif isinstance(duree_val, time):
+                            duree_td = timedelta(
+                                hours=duree_val.hour,
+                                minutes=duree_val.minute,
+                                seconds=duree_val.second
+                            )
+                        else:
+                            # si None ou autre type
+                            duree_td = timedelta(0)
+
+                        # Créer l'objet selon le type de sport
+                        activite_obj = None
                         if type_sport == "course":
-                            activites.append(
-                                Course(
-                                    id_activite=res["id_activite"],
-                                    id_user=res["id_user"],
-                                    date=res["date_activite"],
-                                    distance=res["distance"],
-                                    duree=duree_td,
-                                    trace=res["trace"],
-                                    titre=res["titre"],
-                                    description=res["description"],
-                                    denivele=res.get("denivele", 0.0)
-                                )
+                            activite_obj = Course(
+                                id_activite=res["id_activite"],
+                                id_user=res["id_user"],
+                                date=res["date_activite"],
+                                distance=res["distance"],
+                                duree=duree_td,
+                                trace=res["trace"],
+                                titre=res["titre"],
+                                description=res["description"],
+                                denivele=res.get("denivele", 0.0)
                             )
                         elif type_sport == "cyclisme":
-                            activites.append(
-                                Cyclisme(
-                                    id_activite=res["id_activite"],
-                                    id_user=res["id_user"],
-                                    date=res["date_activite"],
-                                    distance=res["distance"],
-                                    duree=duree_td,
-                                    trace=res["trace"],
-                                    titre=res["titre"],
-                                    description=res["description"],
-                                    denivele=res.get("denivele", 0.0)
-                                )
+                            activite_obj = Cyclisme(
+                                id_activite=res["id_activite"],
+                                id_user=res["id_user"],
+                                date=res["date_activite"],
+                                distance=res["distance"],
+                                duree=duree_td,
+                                trace=res["trace"],
+                                titre=res["titre"],
+                                description=res["description"],
+                                denivele=res.get("denivele", 0.0)
                             )
                         elif type_sport == "natation":
-                            activites.append(
-                                Natation(
-                                    id_activite=res["id_activite"],
-                                    id_user=res["id_user"],
-                                    date=res["date_activite"],
-                                    distance=res["distance"],
-                                    duree=duree_td,
-                                    trace=res["trace"],
-                                    titre=res["titre"],
-                                    description=res["description"],
-                                    denivele=res.get("denivele", 0.0)
-                                )
+                            activite_obj = Natation(
+                                id_activite=res["id_activite"],
+                                id_user=res["id_user"],
+                                date=res["date_activite"],
+                                distance=res["distance"],
+                                duree=duree_td,
+                                trace=res["trace"],
+                                titre=res["titre"],
+                                description=res["description"],
+                                denivele=res.get("denivele", 0.0)
                             )
                         else:
                             logging.warning(f"Type d'activité inconnu : {type_sport}")
+
+                        if activite_obj:
+                            activites.append(activite_obj)
 
         except psycopg2.Error as e:
             logging.error(f"Erreur SQL : {e.pgerror}")

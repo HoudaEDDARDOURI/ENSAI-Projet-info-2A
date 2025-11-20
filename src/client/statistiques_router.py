@@ -14,20 +14,11 @@ user_service = UserService()
 
 @statistiques_router.get("/{user_id}")
 def get_statistiques(user_id: int, reference_date: date = date.today()):
-    """
-    Endpoint qui renvoie les statistiques hebdomadaires d'un utilisateur.
-    """
-    try:
-        user = user_service.lire_user(user_id)
-        if not user:
-            raise HTTPException(status_code=404, detail="Utilisateur non trouvé.")
-
-        service = StatistiqueService(user)
-        stats = service.afficherStats(reference_date)
-        return stats
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    user = user_service.lire_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé.")
+    service = StatistiqueService(user)
+    return service.afficherStats(reference_date)
 
 
 @statistiques_router.get("/prediction/{user_id}")
