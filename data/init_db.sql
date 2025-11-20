@@ -34,7 +34,6 @@ CREATE TABLE app.activite (
     trace           TEXT,
     titre           VARCHAR(100),
     description     TEXT,
-    id_parcours     INT,
     CONSTRAINT clef_activite_users
         FOREIGN KEY (id_user) REFERENCES app.users(id_user)
 );
@@ -48,7 +47,6 @@ CREATE TABLE test.activite (
     trace           TEXT,
     titre           VARCHAR(100),
     description     TEXT,
-    id_parcours     INT,
     CONSTRAINT clef_activite_users
         FOREIGN KEY (id_user) REFERENCES test.users(id_user)
 );
