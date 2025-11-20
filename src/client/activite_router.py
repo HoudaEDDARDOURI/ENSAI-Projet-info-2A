@@ -105,8 +105,8 @@ def modifier_activite(id_activite: int, activite: ActiviteSchema, current_user=D
             trace=activite.trace,
             titre=activite.titre,
             description=activite.description,  # Description incluse
-            id_user=current_user.id_user,
-            denivele=0.0
+            id_user=current_user.id_user
+            
         )
     elif type_sport_lower == "natation":
         a = Natation(
@@ -128,8 +128,8 @@ def modifier_activite(id_activite: int, activite: ActiviteSchema, current_user=D
             trace=activite.trace,
             titre=activite.titre,
             description=activite.description,  # Description incluse
-            id_user=current_user.id_user,
-            denivele=0.0
+            id_user=current_user.id_user
+        
         )
     else:
         raise HTTPException(status_code=400, detail=f"Type de sport inconnu : {activite.type_sport}")

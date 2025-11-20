@@ -15,7 +15,6 @@ class Course(Activite):
                          trace=trace,
                          titre=titre,
                          description=description)
-        self.denivele = denivele
         self.vitesse_minkm = None
 
     def calculer_vitesse_course(self) -> float:
@@ -31,7 +30,6 @@ class Course(Activite):
         vitesse_str = f"{self.vitesse_minkm:.2f}" if self.vitesse_minkm is not None else "N/A"
         print(
             f"Course: {self.titre}, Distance: {self.distance} km, "
-            f"Dénivelé: {self.denivele} m, Vitesse: {vitesse_str} min/km"
         )
 
     def afficher_details(self):

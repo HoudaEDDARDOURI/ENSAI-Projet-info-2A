@@ -30,8 +30,8 @@ class ActiviteService:
                 trace=trace,
                 titre=titre,
                 description=description,
-                id_user=id_user,
-                denivele=0.0
+                id_user=id_user
+                
             )
         elif type_sport.lower() == "natation":
             nouvelle_activite = Natation(
@@ -53,8 +53,8 @@ class ActiviteService:
                 trace=trace,
                 titre=titre,
                 description=description,
-                id_user=id_user,
-                denivele=0.0
+                id_user=id_user
+                
             )
         else:
             raise ValueError(f"Type de sport inconnu : {type_sport}")

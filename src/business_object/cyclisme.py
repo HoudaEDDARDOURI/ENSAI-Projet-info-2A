@@ -15,7 +15,6 @@ class Cyclisme(Activite):
                          trace=trace,
                          titre=titre,
                          description=description)
-        self.denivele = denivele
         self.vitesse_kmh = None
 
     def afficher_details(self):

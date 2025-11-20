@@ -30,7 +30,7 @@ class ActiviteDao(metaclass=Singleton):
                             titre, description, denivele
                         ) VALUES (
                             %(id_user)s, %(date_activite)s, %(type_sport)s, %(distance)s, %(duree)s,
-                            %(trace)s, %(titre)s, %(description)s, %(denivele)s
+                            %(trace)s, %(titre)s, %(description)s
                         )
                         RETURNING id_activite;
                         """,
@@ -42,8 +42,8 @@ class ActiviteDao(metaclass=Singleton):
                             "duree": activite.duree,
                             "trace": activite.trace,
                             "titre": activite.titre,
-                            "description": activite.description,
-                            "denivele": activite.denivele if hasattr(activite, 'denivele') else 0.0
+                            "description": activite.description
+                        
                         },
                     )
                     res = cursor.fetchone()
@@ -88,8 +88,8 @@ class ActiviteDao(metaclass=Singleton):
                                 duree=duree_td,
                                 trace=result["trace"],
                                 titre=result["titre"],
-                                description=result["description"],
-                                denivele=result.get("denivele", 0.0)
+                                description=result["description"]
+                                
                             )
                         elif type_sport == "cyclisme":
                             return Cyclisme(
@@ -100,8 +100,8 @@ class ActiviteDao(metaclass=Singleton):
                                 duree=duree_td,
                                 trace=result["trace"],
                                 titre=result["titre"],
-                                description=result["description"],
-                                denivele=result.get("denivele", 0.0)
+                                description=result["description"]
+                                
                             )
                         elif type_sport == "natation":
                             return Natation(
@@ -112,8 +112,8 @@ class ActiviteDao(metaclass=Singleton):
                                 duree=duree_td,
                                 trace=result["trace"],
                                 titre=result["titre"],
-                                description=result["description"],
-                                denivele=result.get("denivele", 0.0)
+                                description=result["description"]
+                                
                             )
                         else:
                             logging.warning(f"Type d'activité inconnu : {type_sport}")
@@ -174,8 +174,8 @@ class ActiviteDao(metaclass=Singleton):
                                 duree=duree_td,
                                 trace=res["trace"],
                                 titre=res["titre"],
-                                description=res["description"],
-                                denivele=res.get("denivele", 0.0)
+                                description=res["description"]
+                                
                             )
                         elif type_sport == "cyclisme":
                             activite_obj = Cyclisme(
@@ -186,8 +186,8 @@ class ActiviteDao(metaclass=Singleton):
                                 duree=duree_td,
                                 trace=res["trace"],
                                 titre=res["titre"],
-                                description=res["description"],
-                                denivele=res.get("denivele", 0.0)
+                                description=res["description"]
+                                
                             )
                         elif type_sport == "natation":
                             activite_obj = Natation(
@@ -198,8 +198,8 @@ class ActiviteDao(metaclass=Singleton):
                                 duree=duree_td,
                                 trace=res["trace"],
                                 titre=res["titre"],
-                                description=res["description"],
-                                denivele=res.get("denivele", 0.0)
+                                description=res["description"]
+                                
                             )
                         else:
                             logging.warning(f"Type d'activité inconnu : {type_sport}")
@@ -215,50 +215,45 @@ class ActiviteDao(metaclass=Singleton):
         return activites
 
     def modifier(self, activite: Activite) -> bool:
-        """Met à jour les informations d’une activité existante."""
-        if activite.id_activite is None:
-            logging.error("L'ID de l'activité est nécessaire pour la modification.")
-            return False
-
-        try:
-            with DBConnection().connection as connection:
-                with connection.cursor() as cursor:
-                    sql = """
-                        UPDATE activite
-                        SET type_sport = %(type_sport)s,
-                            distance = %(distance)s,
-                            duree = %(duree)s,
-                            trace = %(trace)s,
-                            titre = %(titre)s,
-                            description = %(description)s
-                    """
-                    params = {
-                        "id_activite": activite.id_activite,
-                        "type_sport": activite.type_sport,
-                        "distance": activite.distance,
-                        "duree": activite.duree,
-                        "trace": activite.trace,
-                        "titre": activite.titre,
-                        "description": activite.description,
-                    }
-
-                    # Si l'activité a un dénivelé, on l'ajoute à la requête
-                    if hasattr(activite, "denivele"):
-                        sql += ", denivele = %(denivele)s"
-                        params["denivele"] = activite.denivele
-
-                    sql += " WHERE id_activite = %(id_activite)s;"
-
-                    cursor.execute(sql, params)
-                    if cursor.rowcount == 0:
-                        logging.warning(f"Aucune modification effectuée pour l'activité {activite.id_activite}")
-                        return False  # Aucune ligne modifiée
-                    return True
-        except psycopg2.Error as e:
-            logging.error(f"Erreur SQL : {e.pgerror}")
-        except Exception:
-            logging.exception("Erreur inattendue lors de la modification de l'activité")
+    """Met à jour les informations d’une activité existante."""
+    if activite.id_activite is None:
+        logging.error("L'ID de l'activité est nécessaire pour la modification.")
         return False
+
+    try:
+        with DBConnection().connection as connection:
+            with connection.cursor() as cursor:
+                sql = """
+                    UPDATE activite
+                    SET type_sport = %(type_sport)s,
+                        distance = %(distance)s,
+                        duree = %(duree)s,
+                        trace = %(trace)s,
+                        titre = %(titre)s,
+                        description = %(description)s
+                    WHERE id_activite = %(id_activite)s;
+                """
+                params = {
+                    "id_activite": activite.id_activite,
+                    "type_sport": activite.type_sport,
+                    "distance": activite.distance,
+                    "duree": activite.duree,
+                    "trace": activite.trace,
+                    "titre": activite.titre,
+                    "description": activite.description,
+                }
+
+                cursor.execute(sql, params)
+                if cursor.rowcount == 0:
+                    logging.warning(f"Aucune modification effectuée pour l'activité {activite.id_activite}")
+                    return False  # Aucune ligne modifiée
+                return True
+    except psycopg2.Error as e:
+        logging.error(f"Erreur SQL : {e.pgerror}")
+    except Exception:
+        logging.exception("Erreur inattendue lors de la modification de l'activité")
+    return False
+
 
     def supprimer(self, id_activite: int) -> bool:
         """Supprime une activité."""
