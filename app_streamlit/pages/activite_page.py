@@ -176,14 +176,12 @@ def activites_page():
                             response.raise_for_status()
                             result = response.json()
                             parcours_id_created = result.get("id_parcours")
-                            st.success(f"🎉 Parcours créé pour l'activité '{titre}' !")
 
                             if parcours_id_created:
                                 vis_response = requests.get(f"{API_URL}/parcours/{parcours_id_created}/visualiser")
                                 vis_response.raise_for_status()
                                 html_content = vis_response.json().get("html_content")
                                 if html_content:
-                                    st.info("🗺️ Visualisation automatique du parcours")
                                     components.html(html_content, height=600, scrolling=True)
                                 else:
                                     st.warning("Le parcours a été créé, mais le contenu HTML est vide.")
