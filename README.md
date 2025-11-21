@@ -32,8 +32,10 @@ A user must access statistics about their own activity, such as:
 
 -Number of hours of activity per week.
 # Optional Features :
-## FO1: Visualize statistics from F4 using bar plots, calendar heatmaps, or other visual tools.
-## FO2: Visualize the route of activities on a map.
+## FO1:
+Visualize statistics from F4 using bar plots, calendar heatmaps, or other visual tools.
+## FO2:
+Visualize the route of activities on a map.
 ## FO3:
 A user should be able to:
 -Create a route from a starting and ending address,
