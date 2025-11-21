@@ -4,11 +4,11 @@ Supervisor: Samuel GOUTIN
 
 Members: Clara BEAUVAIS, Houda EDDARDOURI, Sarra CHAMSI, Raphaël CARRERE
 
-Create Your Own Sports Application
+creation of the sports application SporTrack
 
 # Overview
 Strava is a popular social network used to record and share sports activities. However, many of its features are paid, and some may not fit everyone’s expectations.
-This project aims to develop an improved alternative to Strava.
+This project aims to develop an improved alternative to Strava: SporTrack
 
 Concretely, the project consists of:
 A REST API responsible for managing data and interacting with the database.
@@ -45,7 +45,7 @@ Download the GPS trace of the route.
 ## FO4:
 Access performance predictions (e.g., estimated times on new distances) based on past activities.
 
-# Run the Application Locally :
+# Run SporTrack Locally :
 To run the application locally, follow the steps below.
 ## 1. Install the dependencies 
 Before starting the application, install all required packages using:  
