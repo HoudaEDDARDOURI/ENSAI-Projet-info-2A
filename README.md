@@ -40,9 +40,12 @@ Visualize statistics from F4 using bar plots, calendar heatmaps, or other visual
 Visualize the route of activities on a map.
 ## FO3:
 A user should be able to:
+
 -Create a route from a starting and ending address,
+
 -Visualize this route on a map,
-Download the GPS trace of the route.
+
+-Download the GPS trace of the route.
 
 ## FO4:
 Access performance predictions (e.g., estimated times on new distances) based on past activities.
