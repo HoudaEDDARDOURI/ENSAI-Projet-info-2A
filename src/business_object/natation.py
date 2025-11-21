@@ -15,7 +15,6 @@ class Natation(Activite):
                          trace=trace,
                          titre=titre,
                          description=description)
-        self.denivele = denivele
         self.vitesse_min100m = None  # reste None jusqu'au calcul
 
     def calculer_vitesse(self) -> float:

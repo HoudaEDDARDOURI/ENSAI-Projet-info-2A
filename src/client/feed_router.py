@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from business_object.user import User
 from service.user_service import UserService
+from service.activite_service import ActiviteService
 from client.auth import get_current_user
 
 user_service = UserService()
+activite_service = ActiviteService()
 
 feed_router = APIRouter(
     prefix="/feed",
@@ -17,6 +19,7 @@ def get_feed(
 ):
     """
     Récupère le feed : les 20 activités les plus récentes des utilisateurs suivis
+    avec likes, commentaires et informations utilisateur
     
     Parameters:
     - limit: Nombre d'activités à retourner (défaut: 20)
@@ -32,30 +35,55 @@ def get_feed(
                 "message": "Aucune activité disponible. Suivez des utilisateurs pour voir leur contenu !"
             }
         
-        # Formatter la réponse
+        # Formatter la réponse avec toutes les infos nécessaires
+        formatted_activities = []
+        
+        for act in activities:
+            # Récupérer les infos de l'utilisateur propriétaire de l'activité
+            owner = user_service.get_user_by_id(act.id_user)
+            
+            # Récupérer les stats de l'activité (likes et commentaires)
+            likes_count = activite_service.compter_likes(act.id_activite)
+            comments_count = activite_service.compter_commentaires(act.id_activite)
+            user_has_liked = activite_service.user_a_like(act.id_activite, current_user.id_user)
+            
+            # Calculer la vitesse moyenne si possible
+            vitesse_moyenne = None
+            if act.distance and act.duree:
+                try:
+                    duree_heures = act.duree.total_seconds() / 3600
+                    if duree_heures > 0:
+                        vitesse_moyenne = act.distance / duree_heures
+                except:
+                    pass
+            
+            formatted_activities.append({
+                "id_activite": act.id_activite,
+                "type": act.type_sport,
+                "titre": act.titre,
+                "description": getattr(act, 'description', ''),
+                "date": act.date.isoformat() if act.date else None,
+                "duree": str(act.duree) if act.duree else "N/A",
+                "distance": act.distance,
+                "vitesse_moyenne": round(vitesse_moyenne, 2) if vitesse_moyenne else None,
+                "denivele": getattr(act, 'denivele', None),
+                "trace": getattr(act, 'trace', None),  # Ajout de la trace GPX
+                "user": {
+                    "id_user": owner.id_user if owner else act.id_user,
+                    "username": owner.username if owner else "Inconnu",
+                    "prenom": owner.prenom if owner else "",
+                    "nom": owner.nom if owner else ""
+                },
+                "likes_count": likes_count,
+                "comments_count": comments_count,
+                "user_has_liked": user_has_liked
+            })
+        
         return {
-            "activities": [
-                {
-                    "id_activite": act.id_activite,
-                    "type": act.__class__.__name__,
-                    "titre": act.titre,
-                    "description": act.description,
-                    "date": act.date.isoformat() if act.date else None,
-                    "duree": act.duree,
-                    "distance": getattr(act, 'distance', None),
-                    "vitesse_moyenne": getattr(act, 'vitesse_moyenne', None),
-                    "denivele": getattr(act, 'denivele', None),
-                    "user": {
-                        "id_user": act.user.id_user if hasattr(act, 'user') and act.user else act.id_user,
-                        "username": act.user.username if hasattr(act, 'user') and act.user else None,
-                        "prenom": act.user.prenom if hasattr(act, 'user') and act.user else None,
-                        "nom": act.user.nom if hasattr(act, 'user') and act.user else None
-                    }
-                }
-                for act in activities
-            ],
-            "count": len(activities)
+            "activities": formatted_activities,
+            "count": len(formatted_activities)
         }
+        
     except Exception as e:
         raise HTTPException(
             status_code=500, 

@@ -27,7 +27,7 @@ class ActiviteDao(metaclass=Singleton):
                         """
                         INSERT INTO activite(
                             id_user, date_activite, type_sport, distance, duree, trace,
-                            titre, description, denivele
+                            titre, description
                         ) VALUES (
                             %(id_user)s, %(date_activite)s, %(type_sport)s, %(distance)s, %(duree)s,
                             %(trace)s, %(titre)s, %(description)s

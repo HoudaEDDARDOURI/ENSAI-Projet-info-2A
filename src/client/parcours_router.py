@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
 from service.parcours_service import ParcoursService
 from dao.parcours_dao import ParcoursDao
 from business_object.parcours import Parcours
@@ -18,21 +18,15 @@ def creer_parcours(depart: str, arrivee: str, id_user: int, id_activite: int | N
     Crée un nouveau parcours et renvoie l'ID créé.
     """
     try:
-        # Renvoie l'ID ou None
         id_parcours = parcours_service.creer_parcours(depart, arrivee, id_activite, id_user)
         
         if id_parcours is None:
             raise HTTPException(status_code=500, detail="Erreur lors de la création du parcours.")
         
-        # Retour JSON avec ID pour Streamlit
         return {
             "message": "Parcours créé avec succès.",
             "id_parcours": id_parcours
         }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -56,7 +50,7 @@ def lire_parcours(id_parcours: int):
 @parcours_router.get("/{id_parcours}/coordonnees")
 def get_coordonnees(id_parcours: int):
     """
-    Renvoie les coordonnées du parcours (issues du GPX ou géocodage).
+    Renvoie les coordonnées du parcours (issues du GPX en base ou géocodage).
     """
     try:
         parcours = parcours_dao.lire(id_parcours)
@@ -69,25 +63,39 @@ def get_coordonnees(id_parcours: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @parcours_router.get("/{id_parcours}/visualiser")
 def visualiser_parcours(id_parcours: int):
     """
     Génère et retourne le contenu HTML de la carte du parcours.
+    Le HTML est généré en mémoire, aucun fichier n'est créé.
     """
     try:
-        file_path = parcours_service.visualiser_parcours(id_parcours)
-        
-        # Lire le contenu du fichier HTML généré
-        with open(file_path, 'r', encoding='utf-8') as f:
-            html_content = f.read()
-        
-        # Optionnel : supprimer le fichier temporaire après lecture
-        # import os
-        # os.remove(file_path)
-        
+        html_content = parcours_service.visualiser_parcours(id_parcours)
         return {"html_content": html_content}
 
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la génération de la carte : {str(e)}")
+
+
+@parcours_router.post("/visualiser-gpx")
+def visualiser_depuis_gpx(gpx_content: str = Body(..., embed=True)):
+    """
+    Visualise directement un parcours depuis du contenu GPX.
+    Utile pour prévisualiser un GPX sans créer de parcours en base.
+    
+    Body example:
+    {
+        "gpx_content": "<gpx>...</gpx>"
+    }
+    """
+    try:
+        html_content = parcours_service.visualiser_parcours_depuis_gpx(gpx_content)
+        return {"html_content": html_content}
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la génération de la carte : {str(e)}")

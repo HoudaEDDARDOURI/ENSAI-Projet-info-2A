@@ -7,19 +7,14 @@ from dao.parcours_dao import ParcoursDao
 from dao.activite_dao import ActiviteDao  
 from dao.user_dao import UserDao
 from time import sleep
-
-
 import gpxpy
-import os
+import io
 from typing import List, Tuple
-import folium
-import tempfile
-from folium import plugins
 
 
 class ParcoursService:
     """
-    Service pour gérer les parcours : création, modification, suppression, lecture et téléchargement.
+    Service pour gérer les parcours : création, modification, suppression, lecture et visualisation.
     """
 
     def __init__(self):
@@ -36,22 +31,26 @@ class ParcoursService:
 
     def get_coordinates(self, parcours: Parcours) -> List[Tuple[float, float]]:
         """
-        Récupère les coordonnées du parcours soit via un fichier GPX si l'activité est associée,
+        Récupère les coordonnées du parcours soit via le contenu GPX de l'activité,
         soit via un géocodage des adresses.
         """
         if parcours.id_activite:
             activite = self.activite_dao.lire(parcours.id_activite)
             if activite:
-                gpx_file_path = activite.trace
-                return self.extraire_coordonnees_de_gpx(gpx_file_path)
+                gpx_content = activite.trace  # Contenu GPX stocké en base
+                if gpx_content:
+                    return self.extraire_coordonnees_de_gpx_content(gpx_content)
+                else:
+                    raise ValueError(f"Aucun contenu GPX trouvé pour l'activité {parcours.id_activite}")
             else:
                 raise ValueError(f"Aucune activité trouvée pour l'ID {parcours.id_activite}")
         else:
+            # Géocodage des adresses
             geolocator = Nominatim(user_agent="parcours_service", timeout=10)
 
             try:
                 depart_location = geolocator.geocode(parcours.depart)
-                sleep(1)  # Pause de 1 seconde entre les requêtes (requis par Nominatim)
+                sleep(1)  # Pause requise par Nominatim
                 arrivee_location = geolocator.geocode(parcours.arrivee)
 
                 if not depart_location or not arrivee_location:
@@ -65,17 +64,44 @@ class ParcoursService:
             except Exception as e:
                 raise ValueError(f"Erreur lors du géocodage : {str(e)}")
 
-    def extraire_coordonnees_de_gpx(self, gpx_file_path: str) -> List[Tuple[float, float]]:
+    def extraire_coordonnees_de_gpx_content(self, gpx_content: str) -> List[Tuple[float, float]]:
         """
-        Extrait toutes les coordonnées d'un fichier GPX en récupérant les points dans la trace.
-        Le chemin d'accès au fichier GPX est fourni localement.
+        Extrait toutes les coordonnées depuis le contenu GPX (string).
+        Gère les cas : contenu GPX, chemin fichier (ancien système), ou contenu vide.
         """
-        if not os.path.exists(gpx_file_path):
-            raise FileNotFoundError(f"Le fichier GPX à l'emplacement {gpx_file_path} n'a pas été trouvé.")
+        if not gpx_content or gpx_content.strip() == "":
+            raise ValueError("Aucun contenu GPX disponible pour cette activité")
+        
+        # CAS 1 : Ancien système avec chemin de fichier
+        if gpx_content.startswith("uploads/") or (gpx_content.endswith(".gpx") and len(gpx_content) < 200):
+            logging.warning(f"Ancien format détecté (chemin fichier) : {gpx_content}")
+            
+            # Essayer de lire le fichier s'il existe encore
+            import os
+            if os.path.exists(gpx_content):
+                logging.info(f"Lecture du fichier GPX : {gpx_content}")
+                with open(gpx_content, 'r', encoding='utf-8') as f:
+                    gpx_content = f.read()
+            else:
+                raise ValueError(
+                    f"L'activité contient un ancien chemin de fichier ({gpx_content}) "
+                    "qui n'existe plus. Veuillez re-télécharger le fichier GPX pour cette activité."
+                )
+        
+        # CAS 2 : Vérifier que c'est bien du XML
+        if not (gpx_content.strip().startswith("<?xml") or gpx_content.strip().startswith("<gpx")):
+            raise ValueError(
+                f"Le contenu ne semble pas être du XML/GPX valide. "
+                f"Début : {gpx_content[:100]}"
+            )
+        
+        # CAS 3 : Parser le GPX
+        try:
+            gpx = gpxpy.parse(gpx_content)
+        except Exception as e:
+            raise ValueError(f"Erreur lors du parsing du contenu GPX : {str(e)}")
 
-        with open(gpx_file_path, 'r') as gpx_file:
-            gpx = gpxpy.parse(gpx_file)
-
+        # Extraire les coordonnées
         parcours_coords = []
         for track in gpx.tracks:
             for segment in track.segments:
@@ -84,29 +110,87 @@ class ParcoursService:
                     parcours_coords.append((lat, lon))
 
         if not parcours_coords:
-            raise ValueError("Aucun point de parcours trouvé dans le fichier GPX.")
+            raise ValueError("Aucun point de parcours trouvé dans le contenu GPX.")
 
         return parcours_coords
 
-    def visualiser_parcours(self, id_parcours):
+    def visualiser_parcours(self, id_parcours: int) -> str:
         """
-        Récupère un parcours à partir de son ID et génère une carte avec le tracé du parcours.
+        Récupère un parcours à partir de son ID et génère le HTML de la carte.
+        Retourne directement le HTML (pas de fichier créé).
         """
         try:
             parcours = self.parcours_dao.lire(id_parcours)
             if not parcours:
                 raise ValueError(f"Le parcours avec l'ID {id_parcours} n'existe pas")
 
-            print(f"Parcours trouvé : {parcours}")
+            logging.info(f"Parcours trouvé : {parcours}")
 
+            # Récupérer les coordonnées
             parcours_coords = self.get_coordinates(parcours)
 
+            # Calculer le centre de la carte
             map_center = [
                 (parcours_coords[0][0] + parcours_coords[-1][0]) / 2,
                 (parcours_coords[0][1] + parcours_coords[-1][1]) / 2
             ]
+            
+            # Créer la carte
             map_ = folium.Map(location=map_center, zoom_start=13)
 
+            # Marqueur de départ
+            folium.Marker(
+                location=parcours_coords[0],
+                popup="Départ",
+                icon=folium.Icon(color="green", icon="play", prefix="fa")
+            ).add_to(map_)
+
+            # Marqueur d'arrivée
+            folium.Marker(
+                location=parcours_coords[-1],
+                popup="Arrivée",
+                icon=folium.Icon(color="red", icon="flag-checkered", prefix="fa")
+            ).add_to(map_)
+
+            # Tracer le parcours
+            folium.PolyLine(
+                parcours_coords, 
+                color="blue", 
+                weight=3, 
+                opacity=0.8
+            ).add_to(map_)
+            
+            # Ajouter le mode plein écran
+            plugins.Fullscreen().add_to(map_)
+
+            # Générer le HTML en mémoire (pas de fichier créé)
+            html_content = map_._repr_html_()
+
+            return html_content
+
+        except Exception as e:
+            logging.error(f"Erreur dans la génération de la carte : {str(e)}")
+            raise e
+
+    def visualiser_parcours_depuis_gpx(self, gpx_content: str) -> str:
+        """
+        Génère directement le HTML d'une carte depuis du contenu GPX.
+        Utile pour visualiser rapidement sans créer de parcours en base.
+        """
+        try:
+            # Extraire les coordonnées
+            parcours_coords = self.extraire_coordonnees_de_gpx_content(gpx_content)
+
+            # Calculer le centre
+            map_center = [
+                sum(coord[0] for coord in parcours_coords) / len(parcours_coords),
+                sum(coord[1] for coord in parcours_coords) / len(parcours_coords)
+            ]
+            
+            # Créer la carte
+            map_ = folium.Map(location=map_center, zoom_start=13)
+
+            # Marqueurs
             folium.Marker(
                 location=parcours_coords[0],
                 popup="Départ",
@@ -119,16 +203,19 @@ class ParcoursService:
                 icon=folium.Icon(color="red", icon="flag-checkered", prefix="fa")
             ).add_to(map_)
 
-            folium.PolyLine(parcours_coords, color="blue", weight=2.5, opacity=1).add_to(map_)
+            # Tracer le parcours
+            folium.PolyLine(
+                parcours_coords, 
+                color="blue", 
+                weight=3, 
+                opacity=0.8
+            ).add_to(map_)
+            
             plugins.Fullscreen().add_to(map_)
 
-            file_path = f"parcours_{id_parcours}.html"
-            print(f"Sauvegarde de la carte dans : {file_path}")
-
-            map_.save(file_path)
-
-            return file_path
+            # Retourner le HTML
+            return map_._repr_html_()
 
         except Exception as e:
-            print(f"Erreur dans la génération de la carte : {str(e)}")
+            logging.error(f"Erreur génération carte depuis GPX : {str(e)}")
             raise e

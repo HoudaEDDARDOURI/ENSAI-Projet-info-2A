@@ -162,6 +162,10 @@ class UserService:
         """
         return self.userdao.est_suivi(user.id_user, autre_user.id_user)
 
+    def get_user_by_id(self, user_id: int) -> User:
+        """Récupère un utilisateur par son ID"""
+        return self.userdao.lire(user_id)
+
 
 
 

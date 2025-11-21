@@ -176,12 +176,14 @@ def activites_page():
                             response.raise_for_status()
                             result = response.json()
                             parcours_id_created = result.get("id_parcours")
+                            st.success(f"🎉 Parcours créé pour l'activité '{titre}' !")
 
                             if parcours_id_created:
                                 vis_response = requests.get(f"{API_URL}/parcours/{parcours_id_created}/visualiser")
                                 vis_response.raise_for_status()
                                 html_content = vis_response.json().get("html_content")
                                 if html_content:
+                                    st.info("🗺️ Visualisation automatique du parcours")
                                     components.html(html_content, height=600, scrolling=True)
                                 else:
                                     st.warning("Le parcours a été créé, mais le contenu HTML est vide.")
@@ -264,16 +266,24 @@ def activites_page():
             else:
                 try:
                     # --- Upload GPX si présent et récupération du contenu ---
+                    trace_content = ""
+                    
                     if fichier_gpx:
+                        # Nouveau fichier GPX uploadé
                         files = {"file": (fichier_gpx.name, fichier_gpx.getvalue())}
                         resp_upload = requests.post(f"{API_URL}/activites/upload_gpx/", files=files)
                         resp_upload.raise_for_status()
                         upload_result = resp_upload.json()
-                        # Récupérer le contenu GPX pour le stocker en base
+                        # Récupérer le CONTENU GPX (pas le chemin fichier)
                         trace_content = upload_result.get("gpx_content", "")
+                        
+                        if not trace_content:
+                            st.warning("⚠️ Le fichier GPX a été uploadé mais le contenu est vide")
                     else:
-                        # Conserver le contenu existant en cas de modification sans nouveau fichier
-                        trace_content = st.session_state.modif_data.get("trace", "") if st.session_state.modif_data else ""
+                        # Pas de nouveau fichier : conserver l'existant en cas de modification
+                        if st.session_state.modif_data:
+                            trace_content = st.session_state.modif_data.get("trace", "")
+                        # Sinon, trace_content reste vide (activité manuelle sans GPX)
 
                     # --- Payload pour création / modification activité ---
                     payload = {
@@ -281,8 +291,8 @@ def activites_page():
                         "type_sport": type_sport.lower(),
                         "distance": distance,
                         "date": str(date_activite),
-                        "trace": trace_content,  # Contenu GPX au lieu du chemin fichier
-                        "description": description,  # Description ajoutée
+                        "trace": trace_content,  # Contenu GPX complet ou chaîne vide
+                        "description": description,
                         "duree": duree,
                         "id_user": st.session_state.user_id
                     }
