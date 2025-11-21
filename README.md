@@ -14,16 +14,16 @@ Concretely, the project consists of:
 A REST API responsible for managing data and interacting with the database.
 A graphical interface for displaying and interacting with the user’s activities.
 # Core Features :
-F1 — Activity Management
+## F1 — Activity Management
 A user must be able to:
 Create an activity by uploading a GPX file,
 View their activities, with the possibility to apply one or two filters,
 Modify or delete any of their activities.
-F2 — News Feed
+## F2 — News Feed
 A user must access a feed displaying activities from all users they follow.
-F3 — Social Interactions
+## F3 — Social Interactions
 A user must be able to like and comment on activities posted by users they follow.
-F4 — Personal Statistics
+## F4 — Personal Statistics
 A user must access statistics about their own activity, such as:
 
 -Number of activities per week and per sport,
@@ -32,15 +32,15 @@ A user must access statistics about their own activity, such as:
 
 -Number of hours of activity per week.
 # Optional Features :
-FO1: Visualize statistics from F4 using bar plots, calendar heatmaps, or other visual tools.
-FO2: Visualize the route of activities on a map.
-FO3:
+## FO1: Visualize statistics from F4 using bar plots, calendar heatmaps, or other visual tools.
+## FO2: Visualize the route of activities on a map.
+## FO3:
 A user should be able to:
 -Create a route from a starting and ending address,
 -Visualize this route on a map,
 Download the GPS trace of the route.
 
-FO4: Access performance predictions (e.g., estimated times on new distances) based on past activities.
+## FO4: Access performance predictions (e.g., estimated times on new distances) based on past activities.
 
 # Run the Application Locally :
 To run the application locally, follow the steps below.
