@@ -40,7 +40,8 @@ A user should be able to:
 -Visualize this route on a map,
 Download the GPS trace of the route.
 
-## FO4: Access performance predictions (e.g., estimated times on new distances) based on past activities.
+## FO4:
+Access performance predictions (e.g., estimated times on new distances) based on past activities.
 
 # Run the Application Locally :
 To run the application locally, follow the steps below.
