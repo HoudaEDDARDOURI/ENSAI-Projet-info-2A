@@ -49,7 +49,7 @@ Access performance predictions (e.g., estimated times on new distances) based on
 To run the application locally, follow the steps below.
 ## 1. Install the dependencies 
 Before starting the application, install all required packages using:  
-## pip install -r requirements.txt
+pip install -r requirements.txt
 Make sure to run this command inside the virtual environment you are using for the project.
 ## 2. Start the backend (FastAPI API) 
 Open a first terminal and start the backend server with:
