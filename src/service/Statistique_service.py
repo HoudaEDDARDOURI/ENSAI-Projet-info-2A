@@ -116,6 +116,94 @@ class StatistiqueService():
                     pass
         return total_kilometres
 
+    def get_vitesse_moyenne_par_sport(self, date_reference: date, type_sport: str) -> float:
+        """
+        Calcule la vitesse moyenne pour un type de sport donné pendant la semaine
+        où se situe la date_reference. L'unité est déterminée par la classe d'activité
+        (ex: course en min/km, cyclisme en km/h, natation en min/100m).
+        """
+        date_debut_semaine, date_fin_semaine = self._get_bornes_semaine(date_reference)
+
+        activites_filtrees = [
+            a for a in self.user.activites
+            if self._safe_date_comparison(a.date, date_debut_semaine, date_fin_semaine) and a.type_sport.lower() == type_sport.lower()
+        ]
+
+        vitesses = []
+        for activite in activites_filtrees:
+
+            if hasattr(activite, 'calculer_vitesse'):
+                vitesse = activite.calculer_vitesse()
+                if vitesse > 0:
+                    vitesses.append(vitesse)
+
+        if not vitesses:
+            return 0.0
+
+        vitesse_moyenne = statistics.mean(vitesses)
+
+        return round(vitesse_moyenne, 2)
+
+    # Partie graphique
+
+    def get_distances_par_sport_semaine(self, date_reference: date) -> dict:
+        """
+        Calcule et retourne la distance totale par type de sport pour la semaine sélectionnée.
+        Les distances sont retournées en KM (l'unité de base dans vos Activite).
+        """
+        date_debut_semaine, date_fin_semaine = self._get_bornes_semaine(date_reference)
+        distances = {}
+
+        for activite in self.user.activites:
+            if self._safe_date_comparison(activite.date, date_debut_semaine, date_fin_semaine):
+                sport = activite.type_sport.lower()
+                distance_value = activite.distance if activite.distance is not None else 0.0
+
+                try:
+                    distances[sport] = distances.get(sport, 0.0) + float(distance_value)
+                except (ValueError, TypeError):
+                    continue
+
+        return {k: round(v, 2) for k, v in distances.items()}
+
+    def get_duree_par_jour_semaine(self, date_reference: date) -> list[dict]:
+        """
+        Calcule et retourne la durée totale d'activité (en minutes) pour chaque jour de la semaine.
+        Retourne une liste de dictionnaires pour faciliter l'utilisation avec pandas/Streamlit.
+        """
+        date_debut_semaine, date_fin_semaine = self._get_bornes_semaine(date_reference)
+
+        jours_semaine = {
+            (date_debut_semaine + timedelta(days=i)): 0.0 for i in range(7)
+        }
+
+        for activite in self.user.activites:
+            if isinstance(activite.duree, timedelta) and self._safe_date_comparison(activite.date, date_debut_semaine, date_fin_semaine):
+
+                if isinstance(activite.date, str):
+                    date_cle = date.fromisoformat(activite.date)
+                else:
+                    date_cle = activite.date
+
+                duree_minutes = activite.duree.total_seconds() / 60
+
+                if date_cle in jours_semaine:
+                    jours_semaine[date_cle] += duree_minutes
+
+        NOMS_JOURS = ["Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam.", "Dim."]
+
+        data_graph = []
+        for i in range(7):
+            jour_date = date_debut_semaine + timedelta(days=i)
+            data_graph.append({
+                "Jour": NOMS_JOURS[i],
+                "Durée (min)": round(jours_semaine[jour_date], 1)
+            })
+
+        return data_graph
+
+    # Partie prédiction
+
     def predire(self, type_sport, nb_entrainements=10):
         """
         Prédit une distance recommandée pour le prochain entraînement.
@@ -296,12 +384,19 @@ class StatistiqueService():
         distance_totale = self.calculer_kilometres_par_semaine(date_reference)
         temps_total_formatte = self._formater_duree(temps_total_minutes)
 
+        vitesse_course = self.get_vitesse_moyenne_par_sport(date_reference, 'course')
+        vitesse_cyclisme = self.get_vitesse_moyenne_par_sport(date_reference, 'cyclisme')
+        vitesse_natation = self.get_vitesse_moyenne_par_sport(date_reference, 'natation')
+
         return {
             "Utilisateur": self.user.username,
             "Période": self._get_bornes_semaine(date_reference),
             "Statistiques": {
                 "Nombre d'activités": nb_activites,
                 "Temps total d'activité": temps_total_formatte,
-                "Distance totale en kilomètres": round(distance_totale, 2)
+                "Distance totale en kilomètres": round(distance_totale, 2),
+                "Vitesse moyenne course (min/km)": vitesse_course,
+                "Vitesse moyenne cyclisme (km/h)": vitesse_cyclisme,
+                "Vitesse moyenne natation (min/100m)": vitesse_natation,
             }
         }

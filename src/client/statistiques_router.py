@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from datetime import date
 from service.Statistique_service import StatistiqueService
 from business_object.user import User
@@ -42,3 +42,43 @@ def get_prediction(user_id: int, type_sport: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la prédiction : {str(e)}")
+
+
+@statistiques_router.get("/{user_id}/distance_sport")
+def get_distance_par_sport_route(
+    user_id: int,
+    reference_date: date = Query(..., description="Date de référence dans la semaine à analyser")
+):
+    """
+    Retourne la distance totale parcourue pour chaque sport durant la semaine.
+    Utilisé pour le graphique de répartition (Pie Chart).
+    """
+    user = user_service.lire_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé.")
+
+    stats_service = StatistiqueService(user)
+
+    distances_par_sport = stats_service.get_distances_par_sport_semaine(reference_date)
+
+    return distances_par_sport
+
+
+@statistiques_router.get("/{user_id}/duree_journaliere")
+def get_duree_par_jour_route(
+    user_id: int,
+    reference_date: date = Query(..., description="Date de référence dans la semaine à analyser")
+):
+    """
+    Retourne la durée totale d'activité (en minutes) pour chaque jour de la semaine.
+    Utilisé pour le graphique de charge (Bar Chart).
+    """
+    user = user_service.lire_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé.")
+
+    stats_service = StatistiqueService(user)
+
+    duree_par_jour = stats_service.get_duree_par_jour_semaine(reference_date)
+
+    return duree_par_jour

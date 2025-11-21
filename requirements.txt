@@ -22,4 +22,5 @@ psycopg
 passlib
 folium
 geopy
+plotly
 streamlit_folium
