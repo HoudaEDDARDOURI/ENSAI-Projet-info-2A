@@ -11,7 +11,7 @@ Strava is a popular social network used to record and share sports activities. H
 This project aims to develop an improved alternative to Strava: SporTrack
 
 Concretely, the project consists of:
-A REST API responsible for managing data and interacting with the database.
+-A REST API responsible for managing data and interacting with the database.
 A graphical interface for displaying and interacting with the user’s activities.
 # Core Features :
 ## F1 — Activity Management
