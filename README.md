@@ -139,7 +139,7 @@ If you choose to expose port 8000 (API) and port 8501 (Streamlit), Onyxia will a
 
 ## 7. Run tests 
 
-To run tests, cange directory to the root of the project and use the following commande line : 
+To run tests, change directory to the root of the project and use the following commande line : 
 
 ```bash
 PYTHONPATH=src pytest -v
