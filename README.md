@@ -98,8 +98,20 @@ Onyxia (recommended), or your local PostgreSQL installation
       app → production data
       test → dedicated to automated tests
 
-## 4. Run the Application
-### 4.1 Start the Backend (FastAPI)
+## 4. Modify the .env : 
+Change the environment variables to get connected to your database.
+Here's an example : 
+```
+POSTGRES_HOST=postgresql-618885.user-houda
+POSTGRES_PORT=5432
+POSTGRES_USER= user-houda
+POSTGRES_PASSWORD=*************
+POSTGRES_DATABASE=my_app
+POSTGRES_SCHEMA=app
+```
+The database's name is **my_app** and schema is **app**
+## 5. Run the Application
+### 5.1 Start the Backend (FastAPI)
 
 Open a first terminal and run:
 ```bash
@@ -110,7 +122,7 @@ Interactive API documentation (Swagger UI): http://localhost:8000/docs
 <img width="1126" height="152" alt="image" src="https://github.com/user-attachments/assets/112e54df-0b4f-46ea-b35f-eb5ced7ef670" />
 
 
-### 4.2 Start the User Interface (Streamlit)
+### 5.2 Start the User Interface (Streamlit)
 
 In a second terminal, run:
 ```bash
@@ -120,9 +132,20 @@ streamlit run app_streamlit/main.py
 
 Streamlit will automatically open in your browser, usually at: http://localhost:8501
 
-## 5. (Optional) Using Onyxia
+## 6. (Optional) Using Onyxia
 
 If you choose to expose port 8000 (API) and port 8501 (Streamlit), Onyxia will automatically generate two public URLs that you can share.
+
+## 7. Run tests 
+
+To run tests, cange directory to the root of the project and use the following commande line : 
+
+```bash
+PYTHONPATH=src pytest -v
+```
+
+<img width="1008" height="37" alt="image" src="https://github.com/user-attachments/assets/95a62586-3ed8-45b8-bb14-3904bfffdff9" />
+
 
 # Using the Application
 
