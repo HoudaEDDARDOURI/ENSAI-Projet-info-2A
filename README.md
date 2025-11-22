@@ -1,45 +1,68 @@
-# Projet informatique - Groupe 15
+# Computer Science Project – Group 15
 
-Tuteur : Samuel GOUTIN
+Supervisor: Samuel GOUTIN
 
-Membres : Clara BEAUVAIS, Houda EDDARDOURI, Sarra CHAMSI, Raphaël CARRERE
+Members: Clara BEAUVAIS, Houda EDDARDOURI, Sarra CHAMSI, Raphaël CARRERE
 
-Créer votre propre application de sport
+creation of the sports application SporTrack
 
-# Présentation
-Strava est un réseau social utilisé pour enregistrer et partager ses activités sportives. Beaucoup de fonctionnalités sont payantes et d’autres pas au goût de chacun. Ce projet vise à créer une alternative à Strava, mais en mieux !
+# Overview
+Strava is a popular social network used to record and share sports activities. However, many of its features are paid, and some may not fit everyone’s expectations.
+This project aims to develop an improved alternative to Strava: SporTrack
 
-Concrétement, le projet prendra la forme d’une API qui s’appuiera sur une base de données pour persister des informations et sur une interface graphique pour la présentation.
+Concretely, the project consists of:
 
-# Fonctionnalités de base
-F1 : Un utilisateur doit pouvoir :
-créer une activité en chargeant un fichier gpx,
-consulter ses activités avec possibilité d’appliquer un ou deux filtres,
-modifier ou supprimer une activité.
+-A REST API responsible for managing data and interacting with the database.
 
-F2 : Un utilisateur doit pouvoir accéder à un fil d’actualité listant les activités de tous les utilisateurs qu’il suit.
+-A graphical interface for displaying and interacting with the user’s activities.
+# Core Features :
+## F1 — Activity Management
+A user must be able to:
+Create an activity by uploading a GPX file,
+View their activities, with the possibility to apply one or two filters,
+Modify or delete any of their activities.
+## F2 — News Feed
+A user must access a feed displaying activities from all users they follow.
+## F3 — Social Interactions
+A user must be able to like and comment on activities posted by users they follow.
+## F4 — Personal Statistics
+A user must access statistics about their own activity, such as:
 
-F3 : Un utilisateur doit pouvoir liker et commenter l’activité d’un utilisateur qu’il suit.
+-Number of activities per week and per sport,
 
-F4 : Un utilisateur doit pouvoir accéder à des statistiques le concernant :
-nombre d’activités par semaine et par sport,
-nombre de kilomètres parcouru par semaine,
-nombre d’heures d’activité par semaine.
-# Fonctionnalités optionnelles
-FO1 : Un utilisateur doit pouvoir visualiser (via barplots, calendar heatmap, ou autre) ses statistiques définis en F4.
+-Number of kilometers completed per week,
 
-FO2 : Un utilisateur doit pouvoir visualiser le tracé de ses activités sur une carte.
+-Number of hours of activity per week.
+# Optional Features :
+## FO1:
+Visualize statistics from F4 using bar plots, calendar heatmaps, or other visual tools.
+## FO2:
+Visualize the route of activities on a map.
+## FO3:
+A user should be able to:
 
-FO3 : Un utilisateur doit pouvoir :
-créer un parcours à partir d’une adresse de départ et d’arrivée,
-visualiser le parcours sur une carte,
-télécharger la trace gps du parcours.
+-Create a route from a starting and ending address,
 
-FO4 : Un utilisateur doit pouvoir accéder à des prédictions sur des distances inconnues à partir de ses activités.
+-Visualize this route on a map,
 
-# Conseils / Outils …
-Outils : FastAPI (webservice), sqlite (base de données), streamlit (interface graphique)
+-Download the GPS trace of the route.
 
-Qui dit utilisateur dit authentification : optez pour une authentification HTTP basique
+## FO4:
+Access performance predictions (e.g., estimated times on new distances) based on past activities.
 
-Les indications sont parfois incomplètes de manière laisser de la place à votre imagination et à votre bon sens
+# Run SporTrack Locally :
+To run the application locally, follow the steps below.
+## 1. Install the dependencies 
+Before starting the application, install all required packages using:  
+pip install -r requirements.txt
+Make sure to run this command inside the virtual environment you are using for the project.
+## 2. Start the backend (FastAPI API) 
+Open a first terminal and start the backend server with:
+uvicorn client.api:app --host 0.0.0.0 --port 8000 --reload
+The backend will then be available at: http://localhost:8000
+## 3. Start the user interface (Streamlit)
+Open a second terminal and run the Streamlit application:
+streamlit run app_streamlit/main.py
+The user interface will automatically open in your browser at the address provided by Streamlit (usually:http://localhost:8501
+
+

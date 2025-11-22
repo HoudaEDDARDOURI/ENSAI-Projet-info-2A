@@ -81,23 +81,6 @@ class StatistiqueService():
 
         return total_duree_minutes
 
-    """def _convertir_duree_vers_minutes(self, duree_str: str) -> float:
-        """"""Convertit une durée de HH:MM:SS en minutes (float).""""""
-        if not duree_str:
-            return 0.0
-
-        try:
-            heures, minutes, secondes = map(int, duree_str.split(':'))
-            total_minutes = heures * 60 + minutes + secondes / 60
-            return total_minutes
-        except ValueError:
-            # Gérer le cas où la chaîne est mal formatée
-            try:
-                # Tente de convertir directement si ce n'est pas HH:MM:SS
-                return float(duree_str) 
-            except (ValueError, TypeError):
-                return 0.0  # Retourne 0 si la conversion échoue"""
-
     def calculer_kilometres_par_semaine(self, date_reference):
         """
         Calcule le nombre total de kilomètres parcourus par l'utilisateur
@@ -271,7 +254,6 @@ class StatistiqueService():
                 a._sort_date = date_obj
                 activites_valides.append(a)
 
-        # 3. Trier par la nouvelle clé sécurisée
         activites_valides.sort(key=lambda a: a._sort_date, reverse=True)
         return activites_valides[:limite]
 
