@@ -84,6 +84,9 @@ Onyxia (recommended), or your local PostgreSQL installation
 - Specify: Host, Port, Database name, Username and Password
 - Click Create
 
+  <img width="1919" height="863" alt="image" src="https://github.com/user-attachments/assets/adddbf13-8f3c-417e-a399-bcd406546305" />
+
+
 ### 3.3 Initialise the Database
 
 - Select the newly created connection
