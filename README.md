@@ -54,7 +54,7 @@ Access performance predictions (e.g., estimated times on new distances) based on
 ## 1. Clone the Project
 
 - Clone the repository to your machine using HTTPS or SSH:
-- 
+  
 ```bash
 git clone <REPOSITORY_URL>
 ```
@@ -104,6 +104,8 @@ cd src
 uvicorn client.api:app --host 0.0.0.0 --port 8000 --reload
 ```
 Interactive API documentation (Swagger UI): http://localhost:8000/docs
+<img width="1126" height="152" alt="image" src="https://github.com/user-attachments/assets/112e54df-0b4f-46ea-b35f-eb5ced7ef670" />
+
 
 ### 4.2 Start the User Interface (Streamlit)
 
@@ -111,6 +113,7 @@ In a second terminal, run:
 ```bash
 streamlit run app_streamlit/main.py
 ```
+<img width="1002" height="228" alt="image" src="https://github.com/user-attachments/assets/c7cd4c0e-cb2b-4b66-a86a-eae1497ba33f" />
 
 Streamlit will automatically open in your browser, usually at: http://localhost:8501
 
