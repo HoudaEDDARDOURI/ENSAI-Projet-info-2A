@@ -221,3 +221,40 @@ def get_my_following(current_user: User = Depends(get_current_user)):
         }
         for u in followed
     ]
+
+
+@user_router.get("/me/followers")
+def get_my_followers(current_user: User = Depends(get_current_user)):
+    """Récupère la liste des followers (abonnés)"""
+    followers = user_service.lister_followers(current_user)
+    return [
+        {
+            "id_user": u.id_user,
+            "prenom": u.prenom,
+            "nom": u.nom,
+            "username": u.username
+        }
+        for u in followers
+    ]
+
+
+@user_router.delete("/{id}/remove-follower")
+def retirer_follower(id: int, current_user: User = Depends(get_current_user)):
+    """
+    Retirer un abonné (empêcher quelqu'un de vous suivre)
+    Note : L'utilisateur {id} sera retiré de vos followers
+    """
+    follower_user = user_service.lire_user(id)
+    if not follower_user:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+
+    try:
+        # C'est l'inverse : on retire id des followers de current_user
+        # Donc on supprime la relation où id suit current_user
+        success = user_service.ne_plus_suivre(follower_user, current_user)
+        if success:
+            return {"message": f"@{follower_user.username} a été retiré de vos abonnés"}
+        else:
+            raise HTTPException(status_code=400, detail="Cette personne ne vous suivait pas")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

@@ -24,3 +24,4 @@ folium
 geopy
 plotly
 streamlit_folium
+streamlit

@@ -4,6 +4,8 @@ from unittest.mock import patch
 from dotenv import load_dotenv
 from dao.user_dao import UserDao
 from business_object.user import User
+from datetime import datetime, timedelta, date
+
 
 
 def test_creer_ok():
@@ -59,7 +61,7 @@ def utilisateur_exemple():
     # Retourne l'utilisateur créé pour les tests
     return user if creation_ok else None
 
-    def test_creer_utilisateur(utilisateur_exemple):
+def test_creer_utilisateur(utilisateur_exemple):
     """Test de création d'un utilisateur"""
 
     # GIVEN : l'utilisateur est préparé dans la fixture utilisateur_exemple

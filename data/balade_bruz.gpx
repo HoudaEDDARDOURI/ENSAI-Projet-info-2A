@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="ChatGPT" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Balade vélo Bruz ~20km</name>
+    <desc>Parcours vélo en boucle autour de Bruz (~20 km)</desc>
+  </metadata>
+  <trk>
+    <name>Balade Bruz</name>
+    <trkseg>
+      <trkpt lat="48.0295" lon="-1.7065">
+        <name>Départ - Centre de Bruz</name>
+        <time>2025-11-21T10:00:00Z</time>
+      </trkpt>
+      <trkpt lat="48.031" lon="-1.71">
+        <time>2025-11-21T10:02:00Z</time>
+      </trkpt>
+      <trkpt lat="48.033" lon="-1.715">
+        <time>2025-11-21T10:04:00Z</time>
+      </trkpt>
+      <trkpt lat="48.037" lon="-1.718">
+        <time>2025-11-21T10:06:00Z</time>
+      </trkpt>
+      <trkpt lat="48.04" lon="-1.72">
+        <time>2025-11-21T10:08:00Z</time>
+      </trkpt>
+      <trkpt lat="48.045" lon="-1.722">
+        <time>2025-11-21T10:10:00Z</time>
+      </trkpt>
+      <trkpt lat="48.05" lon="-1.72">
+        <time>2025-11-21T10:12:00Z</time>
+      </trkpt>
+      <trkpt lat="48.052" lon="-1.715">
+        <time>2025-11-21T10:14:00Z</time>
+      </trkpt>
+      <trkpt lat="48.051" lon="-1.71">
+        <time>2025-11-21T10:16:00Z</time>
+      </trkpt>
+      <trkpt lat="48.048" lon="-1.705">
+        <time>2025-11-21T10:18:00Z</time>
+      </trkpt>
+      <trkpt lat="48.044" lon="-1.702">
+        <time>2025-11-21T10:20:00Z</time>
+      </trkpt>
+      <trkpt lat="48.04" lon="-1.7">
+        <time>2025-11-21T10:22:00Z</time>
+      </trkpt>
+      <trkpt lat="48.035" lon="-1.701">
+        <time>2025-11-21T10:24:00Z</time>
+      </trkpt>
+      <trkpt lat="48.03" lon="-1.703">
+        <time>2025-11-21T10:26:00Z</time>
+      </trkpt>
+      <trkpt lat="48.0295" lon="-1.7065">
+        <name>Arrivée - Centre de Bruz</name>
+        <time>2025-11-21T10:28:00Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

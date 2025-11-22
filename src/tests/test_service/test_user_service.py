@@ -1,7 +1,11 @@
+import pytest
 from unittest.mock import MagicMock
 from service.user_service import UserService
 from dao.user_dao import UserDao
 from business_object.user import User
+from dao.user_dao import UserDao
+from business_object.user import User
+from datetime import datetime, timedelta, date
 
 
 # Liste d'exemple pour les tests
@@ -12,6 +16,20 @@ liste_users = [
 ]
 
 
+
+@pytest.fixture
+def utilisateur_exemple():
+    return User(
+        id_user=1,
+        prenom="Clara",
+        nom="Beauvais",
+        username="clara123",
+        mot_de_passe="secret123",
+        created_at=datetime.now()
+    )
+
+
+
 def test_creer_ok():
     """Création d'un utilisateur réussie"""
     # GIVEN
@@ -19,7 +37,7 @@ def test_creer_ok():
     UserDao().creer = MagicMock(return_value=True)
 
     # WHEN
-    user = UserService().creer(prenom, nom, username, mot_de_passe)
+    user = UserService().creer_user(prenom, nom, username, mot_de_passe)
 
     # THEN
     assert user.username == username
@@ -33,7 +51,7 @@ def test_creer_echec():
     UserDao().creer = MagicMock(return_value=False)
 
     # WHEN
-    user = UserService().creer(prenom, nom, username, mot_de_passe)
+    user = UserService().creer_user(prenom, nom, username, mot_de_passe)
 
     # THEN
     assert user is None
@@ -73,16 +91,21 @@ def test_pseudo_deja_utilise_non():
     assert UserService().pseudo_deja_utilise("nouveau") is False
 
 
-def test_supprimer_ok():
-    """Suppression réussie"""
-    UserDao().supprimer = MagicMock(return_value=True)
-    assert UserService().supprimer(1) is True
+def test_supprimer_ok(utilisateur_exemple, monkeypatch):
+    monkeypatch.setattr(
+        UserDao, "supprimer",
+        lambda self, id_user: id_user == utilisateur_exemple.id_user
+    )
+
+    service = UserService()
+    assert service.supprimer_user(utilisateur_exemple.id_user) is True
+
 
 
 def test_supprimer_echec():
     """Suppression échouée"""
     UserDao().supprimer = MagicMock(return_value=False)
-    assert UserService().supprimer(999) is False
+    assert UserService().supprimer_user(999) is False
 
 
 def test_suivre_ok():

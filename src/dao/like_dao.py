@@ -82,4 +82,29 @@ class LikeDao(metaclass=Singleton):
             deleted = True
         return deleted
 
+
+    def lire(self, id_like: int) -> Like | None:
+        """Récupère un like par son ID"""
+        like = None
+        try:
+            with DBConnection().connection as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT * FROM likes WHERE id_like = %(id_like)s;",
+                        {"id_like": id_like},
+                    )
+                    res = cursor.fetchone()
+                    if res:
+                        like = Like(
+                            id_like=res["id_like"],
+                            id_user=res["id_user"],
+                            id_activite=res["id_activite"],
+                            created_at=res["created_at"],
+                        )
+        except Exception as e:
+            logging.error(f"Erreur lors de la lecture du like {id_like}: {e}")
+
+        return like
+
+
     

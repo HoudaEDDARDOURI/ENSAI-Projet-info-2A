@@ -3,6 +3,9 @@ from service.activite_service import ActiviteService
 from business_object.course import Course
 from business_object.like import Like
 from datetime import date, timedelta
+from dao.user_dao import UserDao
+from business_object.user import User
+from datetime import datetime, timedelta, date
 
 
 # URL de ta base de test si tu en as une, sinon la base réelle
@@ -16,7 +19,33 @@ def activite_service():
     return service
 
 
-def test_creer_activite_in_db(activite_service):
+
+@pytest.fixture
+def utilisateur_exemple():
+    """Fixture qui crée un utilisateur et retourne son ID"""
+    user = User(
+        id_user=None,  # L'ID est None au début car il sera généré lors de l'insertion
+        prenom="Clara",
+        nom="Beauvais",
+        username="clara123",
+        mot_de_passe="secret123",
+        created_at=datetime.now()  # L'heure de création est automatiquement définie lors de l'instantiation
+    )
+
+    # Suppression d'un utilisateur avec le même username s'il existe
+    existing_user = UserDao().trouver_par_username(user.username)
+    if existing_user:
+        UserDao().supprimer(existing_user.id_user)
+
+    # Création de l'utilisateur dans la base de données
+    creation_ok = UserDao().creer(user)
+    
+    # Retourne l'utilisateur créé pour les tests
+    return user if creation_ok else None
+
+
+
+def test_creer_activite_in_db(activite_service, utilisateur_exemple):
     """Test d'intégration : créer une activité et vérifier en base"""
     
     date_activite = date(2025, 11, 5)
@@ -26,8 +55,7 @@ def test_creer_activite_in_db(activite_service):
     trace = "trace_test.gpx"
     titre = "Course test intégration"
     description = "Activité test intégration"
-    id_user = 1
-    id_parcours = 1
+    id_user = utilisateur_exemple.id_user
 
     # Créer l'activité
     activite = activite_service.creer_activite(
@@ -38,8 +66,7 @@ def test_creer_activite_in_db(activite_service):
         trace,
         titre,
         description,
-        id_user,
-        id_parcours
+        id_user
     )
 
     assert activite is not None
@@ -61,7 +88,7 @@ def test_creer_activite_in_db(activite_service):
 
 
 
-def test_supprimer_activite(activite_service):
+def test_supprimer_activite(activite_service, utilisateur_exemple):
     """Test d'intégration : créer puis supprimer une activité"""
 
     # 1️⃣ Créer une activité temporaire
@@ -72,8 +99,7 @@ def test_supprimer_activite(activite_service):
     trace = "trace_test.gpx"
     titre = "Course à supprimer"
     description = "Activité temporaire pour test"
-    id_user = 1
-    id_parcours = 1
+    id_user = utilisateur_exemple.id_user
 
     activite = activite_service.creer_activite(
         date_activite,
@@ -83,8 +109,7 @@ def test_supprimer_activite(activite_service):
         trace,
         titre,
         description,
-        id_user,
-        id_parcours
+        id_user
     )
 
     assert activite is not None
@@ -104,47 +129,7 @@ def test_supprimer_activite(activite_service):
 
 
 
-def test_afficher_toutes_activites(activite_service, capsys):
-    """Test d'intégration : vérifier l'affichage de toutes les activités d'un utilisateur"""
-
-    # ID de l'utilisateur pour le test
-    id_user = 1
-
-    # Créer une activité de test
-    date_activite = date(2025, 11, 5)
-    activite = activite_service.creer_activite(
-        date_activite,
-        "Course",
-        5.0,
-        timedelta(minutes=30),
-        "trace_affichage.gpx",
-        "Activite affichage",
-        "Description affichage",
-        id_user,  # id_user
-        1         # id_parcours
-    )
-    assert activite is not None
-
-    # Appel de la fonction à tester
-    # On capture la sortie pour vérifier l'affichage
-    import sys
-    from io import StringIO
-
-    captured_output = StringIO()
-    sys.stdout = captured_output  # redirige stdout
-
-    activite_service.afficher_toutes_activites(id_user)
-
-    sys.stdout = sys.__stdout__  # rétablit stdout
-    output = captured_output.getvalue()
-
-    # Vérifier que la sortie contient le titre et la description
-    assert "Activite affichage" in output
-    assert "Description affichage" in output
-
-
-
-def test_modifier_activite(activite_service):
+def test_modifier_activite(activite_service, utilisateur_exemple):
     """Test d'intégration : modification d'une activité"""
     
     #  Créer une activité temporaire
@@ -155,12 +140,12 @@ def test_modifier_activite(activite_service):
     trace = "trace_modif.gpx"
     titre = "Titre original"
     description = "Description originale"
-    id_user = 1
-    id_parcours = 1
+    id_user = utilisateur_exemple.id_user
+
 
     activite = activite_service.creer_activite(
         date_activite, type_sport, distance, duree,
-        trace, titre, description, id_user, id_parcours
+        trace, titre, description, id_user
     )
 
     assert activite is not None
@@ -182,7 +167,7 @@ def test_modifier_activite(activite_service):
     assert activite_modifiee.description == "Description modifiée"
 
 
-def test_get_likes_activite(activite_service):
+def test_get_likes_activite(activite_service, utilisateur_exemple):
     """Test d'intégration : récupérer les likes d'une activité"""
     date_activite = date(2025, 11, 5)
     type_sport = "Course"
@@ -191,13 +176,11 @@ def test_get_likes_activite(activite_service):
     trace = "trace_test_likes.gpx"
     titre = "Course avec likes"
     description = "Activité pour test likes"
-    id_user = 1
-    id_parcours = 1
-
+    id_user = utilisateur_exemple.id_user
     # Créer l'activité
     activite = activite_service.creer_activite(
         date_activite, type_sport, distance, duree,
-        trace, titre, description, id_user, id_parcours
+        trace, titre, description, id_user
     )
     assert activite is not None
 

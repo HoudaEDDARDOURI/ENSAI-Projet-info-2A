@@ -195,41 +195,88 @@ def users_page():
             # 📑 ONGLETS
             # -------------------------
             tab1, tab2, tab3 = st.tabs(["👥 Mes Suivis", "💡 Suggestions", "⚙️ Paramètres"])
-            
             # ═══════════════════════════════════
             # TAB 1 : MES SUIVIS
             # ═══════════════════════════════════
             with tab1:
-                st.subheader(f"👥 Personnes que vous suivez ({user.get('followed_count', 0)})")
+                # Charger les données
+                followed_users = []
+                followers_users = []
                 
-                # Récupérer la liste des suivis via l'endpoint
                 try:
+                    # Récupérer abonnements
                     following_resp = requests.get(
                         f"{API_URL}/users/me/following", 
                         auth=st.session_state.auth,
                         timeout=10
                     )
-                    
                     if following_resp.status_code == 200:
                         followed_users = following_resp.json() or []
-                        
-                        if not followed_users:
-                            st.markdown("""
-                            <div class="empty-state">
-                                <div style="font-size: 3em;">🔍</div>
-                                <h3>Vous ne suivez personne encore</h3>
-                                <p>Découvrez des personnes dans l'onglet Suggestions !</p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                        else:
-                            for followed in followed_users:
-                                render_user_card(followed, is_following=True)
-                    else:
-                        st.error("Impossible de charger vos suivis")
+                    
+                    # Récupérer abonnés
+                    followers_resp = requests.get(
+                        f"{API_URL}/users/me/followers", 
+                        auth=st.session_state.auth,
+                        timeout=10
+                    )
+                    if followers_resp.status_code == 200:
+                        followers_users = followers_resp.json() or []
                         
                 except Exception as e:
-                    st.error(f"Erreur : {e}")
-            
+                    st.error(f"Erreur lors du chargement : {e}")
+                
+                # Sous-onglets
+                subtab1, subtab2 = st.tabs([
+                    f"👥 Abonnements ({len(followed_users)})", 
+                    f"👤 Abonnés ({len(followers_users)})"
+                ])
+                
+                # ─────────────────────────────────────
+                # SOUS-ONGLET 1 : ABONNEMENTS
+                # ─────────────────────────────────────
+                with subtab1:
+                    if not followed_users:
+                        st.markdown("""
+                        <div class="empty-state">
+                            <div style="font-size: 3em;">🔍</div>
+                            <h3>Vous ne suivez personne encore</h3>
+                            <p>Découvrez des personnes dans l'onglet Suggestions !</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"### Vous suivez {len(followed_users)} personne(s)")
+                        for followed in followed_users:
+                            # relation_type="follow" pour les abonnements
+                            render_user_card(
+                                followed, 
+                                is_following=True, 
+                                key_prefix="following_", 
+                                relation_type="follow"
+                            )
+                
+                # ─────────────────────────────────────
+                # SOUS-ONGLET 2 : ABONNÉS
+                # ─────────────────────────────────────
+                with subtab2:
+                    if not followers_users:
+                        st.markdown("""
+                        <div class="empty-state">
+                            <div style="font-size: 3em;">😔</div>
+                            <h3>Personne ne vous suit encore</h3>
+                            <p>Partagez vos activités pour attirer des abonnés !</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"### {len(followers_users)} personne(s) vous suit/suivent")
+                        
+                        for follower in followers_users:
+                            # relation_type="follower" pour afficher le bouton "Retirer l'abonné"
+                            render_user_card(
+                                follower, 
+                                is_following=False,  # Pas utilisé dans ce cas
+                                key_prefix="followers_", 
+                                relation_type="follower"
+                            )
             # ═══════════════════════════════════
             # TAB 2 : SUGGESTIONS
             # ═══════════════════════════════════
@@ -256,7 +303,8 @@ def users_page():
                             """, unsafe_allow_html=True)
                         else:
                             for s in suggestions:
-                                render_user_card(s, is_following=False)
+                                # ✅ Préfixe "suggestions_" pour les suggestions
+                                render_user_card(s, is_following=False, key_prefix="suggestions_")
                     else:
                         st.error("Impossible de récupérer les suggestions")
                         
@@ -343,9 +391,15 @@ def users_page():
     # -------------------------
     render_auth_page()
 
-
-def render_user_card(user_data, is_following=False):
-    """Affiche une carte utilisateur avec bouton follow/unfollow"""
+def render_user_card(user_data, is_following=False, key_prefix="", relation_type="follow"):
+    """Affiche une carte utilisateur avec bouton follow/unfollow
+    
+    Args:
+        user_data: Dictionnaire avec les infos de l'utilisateur
+        is_following: True si on suit déjà cet utilisateur
+        key_prefix: Préfixe pour rendre les clés uniques
+        relation_type: "follow" (abonnements) ou "follower" (abonnés)
+    """
     user_id = user_data.get('id_user')
     
     st.markdown('<div class="user-card">', unsafe_allow_html=True)
@@ -359,39 +413,63 @@ def render_user_card(user_data, is_following=False):
         st.caption(f"@{user_data.get('username', '')}")
     
     with col3:
-        if is_following:
-            if st.button("❌ Ne plus suivre", key=f"unfollow_{user_id}", type="secondary", use_container_width=True):
+        # ════════════════════════════════════════════
+        # CAS 1 : Onglet ABONNÉS (followers)
+        # ════════════════════════════════════════════
+        if relation_type == "follower":
+            if st.button("🚫 Retirer l'abonné", key=f"{key_prefix}remove_follower_{user_id}", type="secondary", use_container_width=True):
                 try:
-                    unfollow_resp = requests.delete(
-                        f"{API_URL}/users/{user_id}/follow",
+                    remove_resp = requests.delete(
+                        f"{API_URL}/users/{user_id}/remove-follower",
                         auth=st.session_state.auth,
                         timeout=10
                     )
-                    if unfollow_resp.status_code == 200:
-                        st.success(f"Vous ne suivez plus @{user_data.get('username')}")
+                    if remove_resp.status_code == 200:
+                        st.success(f"@{user_data.get('username')} ne vous suit plus")
                         st.rerun()
                     else:
-                        st.error(unfollow_resp.json().get("detail", "Erreur"))
+                        st.error(remove_resp.json().get("detail", "Erreur"))
                 except Exception as e:
                     st.error(f"Erreur : {e}")
+        
+        # ════════════════════════════════════════════
+        # CAS 2 : Onglet ABONNEMENTS ou SUGGESTIONS
+        # ════════════════════════════════════════════
         else:
-            if st.button("➕ Suivre", key=f"follow_{user_id}", type="primary", use_container_width=True):
-                try:
-                    follow_resp = requests.post(
-                        f"{API_URL}/users/{user_id}/follow",
-                        auth=st.session_state.auth,
-                        timeout=10
-                    )
-                    if follow_resp.status_code == 200:
-                        st.success(f"Vous suivez maintenant @{user_data.get('username')}")
-                        st.rerun()
-                    else:
-                        st.error(follow_resp.json().get("detail", "Erreur"))
-                except Exception as e:
-                    st.error(f"Erreur : {e}")
+            if is_following:
+                # Bouton "Ne plus suivre"
+                if st.button("❌ Ne plus suivre", key=f"{key_prefix}unfollow_{user_id}", type="secondary", use_container_width=True):
+                    try:
+                        unfollow_resp = requests.delete(
+                            f"{API_URL}/users/{user_id}/follow",
+                            auth=st.session_state.auth,
+                            timeout=10
+                        )
+                        if unfollow_resp.status_code == 200:
+                            st.success(f"Vous ne suivez plus @{user_data.get('username')}")
+                            st.rerun()
+                        else:
+                            st.error(unfollow_resp.json().get("detail", "Erreur"))
+                    except Exception as e:
+                        st.error(f"Erreur : {e}")
+            else:
+                # Bouton "Suivre"
+                if st.button("➕ Suivre", key=f"{key_prefix}follow_{user_id}", type="primary", use_container_width=True):
+                    try:
+                        follow_resp = requests.post(
+                            f"{API_URL}/users/{user_id}/follow",
+                            auth=st.session_state.auth,
+                            timeout=10
+                        )
+                        if follow_resp.status_code == 200:
+                            st.success(f"Vous suivez maintenant @{user_data.get('username')}")
+                            st.rerun()
+                        else:
+                            st.error(follow_resp.json().get("detail", "Erreur"))
+                    except Exception as e:
+                        st.error(f"Erreur : {e}")
     
     st.markdown('</div>', unsafe_allow_html=True)
-
 
 def render_auth_page():
     """Page de connexion/inscription"""
