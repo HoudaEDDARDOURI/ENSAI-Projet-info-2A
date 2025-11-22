@@ -157,8 +157,11 @@ Once the interface is open, you can explore the app freely.
 3. Create an Activity
    
   Two options are available:
+  
         a) Upload a GPX file : We provide sample GPX files in the data/ folder.
+        
         b) Enter the activity manually by specifying duration and distance.
+        
 5. Navigate the User Space
 You can edit your user profile, view your feed, like and comment posts, follow and unfollow other users
 
