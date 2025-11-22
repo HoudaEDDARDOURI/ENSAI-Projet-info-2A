@@ -50,7 +50,7 @@ A user should be able to:
 ## FO4:
 Access performance predictions (e.g., estimated times on new distances) based on past activities.
 
-# User Guide
+# User Guide: How to Run SporTrack Locally :
 ## 1. Clone the Project
 
 - Clone the repository to your machine using HTTPS or SSH:
@@ -138,19 +138,6 @@ Once the interface is open, you can explore the app freely.
 You can edit your user profile, view your feed, like and comment posts, follow and unfollow other users
 
 
-# Run SporTrack Locally :
-To run the application locally, follow the steps below.
-## 1. Install the dependencies 
-Before starting the application, install all required packages using:  
-pip install -r requirements.txt
-Make sure to run this command inside the virtual environment you are using for the project.
-## 2. Start the backend (FastAPI API) 
-Open a first terminal and start the backend server with:
-uvicorn client.api:app --host 0.0.0.0 --port 8000 --reload
-The backend will then be available at: http://localhost:8000
-## 3. Start the user interface (Streamlit)
-Open a second terminal and run the Streamlit application:
-streamlit run app_streamlit/main.py
-The user interface will automatically open in your browser at the address provided by Streamlit (usually:http://localhost:8501
+
 
 
