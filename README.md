@@ -141,12 +141,26 @@ If you choose to expose port 8000 (API) and port 8501 (Streamlit), Onyxia will a
 
 To run tests, change directory to the root of the project and use the following commande line : 
 
+**Linux/macOS/VsCode Onyxia**
+
 ```bash
 PYTHONPATH=src pytest -v
 ```
 
 <img width="1008" height="37" alt="image" src="https://github.com/user-attachments/assets/95a62586-3ed8-45b8-bb14-3904bfffdff9" />
 
+**Windows Powershell**
+
+Define PYTHONPATH in the terminal : 
+
+```bash
+$env:PYTHONPATH = "src"
+```
+Launch pytest via Python :
+
+```bash
+python -m pytest -v
+```
 
 # Using the Application
 
