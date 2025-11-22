@@ -54,20 +54,21 @@ Access performance predictions (e.g., estimated times on new distances) based on
 ## 1. Clone the Project
 
 - Clone the repository to your machine using HTTPS or SSH:
-
+- 
+```bash
 git clone <REPOSITORY_URL>
-
+```
 - Move into the project directory:
-
+```bash
 cd ENSAI-Projet-info-2A
-
+```
 ## 2. Install Dependencies
 
 Before running the application, install all required packages:
 
 ```bash
 pip install -r "requirements.txt"
-
+```
 
 ## 3. Database Setup
 ### 3.1 Create a PostgreSQL Service
@@ -98,17 +99,18 @@ Onyxia (recommended), or your local PostgreSQL installation
 ### 4.1 Start the Backend (FastAPI)
 
 Open a first terminal and run:
-
+```bash
 cd src
 uvicorn client.api:app --host 0.0.0.0 --port 8000 --reload
-
+```
 Interactive API documentation (Swagger UI): http://localhost:8000/docs
 
 ### 4.2 Start the User Interface (Streamlit)
 
 In a second terminal, run:
-
+```bash
 streamlit run app_streamlit/main.py
+```
 
 Streamlit will automatically open in your browser, usually at: http://localhost:8501
 
