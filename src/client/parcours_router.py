@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, Body
 from service.parcours_service import ParcoursService
 from dao.parcours_dao import ParcoursDao
-from business_object.parcours import Parcours
 
 parcours_router = APIRouter(
     prefix="/parcours",

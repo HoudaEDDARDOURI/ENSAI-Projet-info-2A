@@ -48,6 +48,8 @@ def activites_page():
     if "auth" not in st.session_state: st.session_state.auth = None
     if "modif_id" not in st.session_state: st.session_state.modif_id = None
     if "modif_data" not in st.session_state: st.session_state.modif_data = {}
+    if "parcours_visible" not in st.session_state: st.session_state.parcours_visible = None
+    if "parcours_html" not in st.session_state: st.session_state.parcours_html = None
 
     # Auth check
     if not st.session_state.user_id or not st.session_state.auth:
@@ -107,16 +109,95 @@ def activites_page():
                 "Durée": duree,
                 "Date": date_formatted,
                 "GPX": has_gpx,
-                "Description": description[:50] + "..." if len(description) > 50 else description
+                "Description": description[:30] + "..." if len(description) > 30 else description
             })
         df = pd.DataFrame(data_tableau)
         st.dataframe(df.drop('ID', axis=1), use_container_width=True, hide_index=True)
 
-        # --- Actions ---
-        st.markdown("### Actions")
-        col1, col2, col3 = st.columns([1, 1, 2])
+        # --- Filtrer les activités avec GPX ---
+        activites_avec_gpx = [act for act in activites_triees if act.get("trace")]
+        
+        if activites_avec_gpx:
+            st.markdown("---")
+            
+            # --- Section Actions avec boutons (uniquement pour activités avec GPX) ---
+            st.subheader("🗺️ Actions sur les activités avec GPX")
+            
+            for act in activites_avec_gpx:
+                act_id = act.get("id_activite")
+                titre = act.get("titre", "Sans titre")
+                trace_content = act.get("trace", "")
+                
+                # Créer une ligne pour chaque activité
+                cols = st.columns([3, 1, 1])
+                
+                with cols[0]:
+                    st.markdown(f"**{titre}**")
+                
+                with cols[1]:
+                    # Bouton Visualiser
+                    if st.session_state.parcours_visible == act_id:
+                        if st.button("❌ Fermer", key=f"close_{act_id}", use_container_width=True, type="secondary"):
+                            st.session_state.parcours_visible = None
+                            st.session_state.parcours_html = None
+                            st.rerun()
+                    else:
+                        if st.button("🗺️ Visualiser", key=f"vis_{act_id}", use_container_width=True):
+                            try:
+                                with st.spinner(f"🔄 Chargement du parcours..."):
+                                    payload = {
+                                        "depart": "",
+                                        "arrivee": "",
+                                        "id_user": st.session_state.user_id,
+                                        "id_activite": act_id
+                                    }
+                                    response = requests.post(f"{API_URL}/parcours/", params=payload, timeout=15)
+                                    response.raise_for_status()
+                                    result = response.json()
+                                    parcours_id_created = result.get("id_parcours")
 
-        # --- Modifier ---
+                                    if parcours_id_created:
+                                        vis_response = requests.get(
+                                            f"{API_URL}/parcours/{parcours_id_created}/visualiser",
+                                            timeout=15
+                                        )
+                                        vis_response.raise_for_status()
+                                        html_content = vis_response.json().get("html_content")
+                                        
+                                        if html_content:
+                                            st.session_state.parcours_visible = act_id
+                                            st.session_state.parcours_html = html_content
+                                            st.rerun()
+                                        else:
+                                            st.warning("⚠️ Contenu HTML vide.")
+                                    else:
+                                        st.warning("⚠️ Aucun ID de parcours retourné.")
+                            except Exception as e:
+                                st.error(f"❌ Erreur : {e}")
+                
+                with cols[2]:
+                    # Bouton Télécharger GPX
+                    st.download_button(
+                        label="⬇️ GPX",
+                        data=trace_content,
+                        file_name=f"{titre.replace(' ', '_')}_{act_id}.gpx",
+                        mime="application/gpx+xml",
+                        key=f"download_{act_id}",
+                        use_container_width=True
+                    )
+            
+            # Afficher la carte si un parcours est visible
+            if st.session_state.parcours_visible and st.session_state.parcours_html:
+                st.markdown("---")
+                st.markdown("### 🗺️ Carte du parcours")
+                components.html(st.session_state.parcours_html, height=600, scrolling=False)
+
+        st.markdown("---")
+
+        # --- Actions Modifier/Supprimer ---
+        st.subheader("✏️ Modifier ou Supprimer")
+        col1, col2 = st.columns([1, 1])
+
         with col1:
             activite_a_modifier = st.selectbox(
                 "Sélectionner une activité à modifier",
@@ -130,7 +211,6 @@ def activites_page():
                         st.session_state.modif_data = act
                         st.rerun()
 
-        # --- Supprimer ---
         with col2:
             activite_a_supprimer = st.selectbox(
                 "Sélectionner une activité à supprimer",
@@ -152,58 +232,6 @@ def activites_page():
                                 st.error(f"❌ Erreur suppression: {msg}")
                         except Exception as e:
                             st.error(f"❌ Erreur suppression: {e}")
-
-        # --- Visualiser parcours ---
-        with col3:
-            st.markdown("#### 🔍 Actions parcours")
-            for act in activites_triees:
-                act_id = act.get("id_activite")
-                titre = act.get("titre", "Sans titre")
-                trace_content = act.get("trace", "")
-                
-                col_parcours, col_download = st.columns(2)
-                
-                with col_parcours:
-                    if st.button(f"🗺️ {titre}", key=f"parcours_{act_id}"):
-                        try:
-                            payload = {
-                                "depart": "",
-                                "arrivee": "",
-                                "id_user": st.session_state.user_id,
-                                "id_activite": act_id
-                            }
-                            response = requests.post(f"{API_URL}/parcours/", params=payload)
-                            response.raise_for_status()
-                            result = response.json()
-                            parcours_id_created = result.get("id_parcours")
-                            st.success(f"🎉 Parcours créé pour l'activité '{titre}' !")
-
-                            if parcours_id_created:
-                                vis_response = requests.get(f"{API_URL}/parcours/{parcours_id_created}/visualiser")
-                                vis_response.raise_for_status()
-                                html_content = vis_response.json().get("html_content")
-                                if html_content:
-                                    st.info("🗺️ Visualisation automatique du parcours")
-                                    components.html(html_content, height=600, scrolling=True)
-                                else:
-                                    st.warning("Le parcours a été créé, mais le contenu HTML est vide.")
-                            else:
-                                st.warning("Le parcours a été créé, mais l'API n'a pas renvoyé d'ID.")
-                        except requests.exceptions.HTTPError as http_err:
-                            st.error(f"Erreur HTTP : {http_err.response.status_code} - {http_err.response.text}")
-                        except Exception as e:
-                            st.error(f"Erreur : {e}")
-                
-                with col_download:
-                    # Bouton de téléchargement du GPX si disponible
-                    if trace_content:
-                        st.download_button(
-                            label=f"⬇️ GPX",
-                            data=trace_content,
-                            file_name=f"{titre.replace(' ', '_')}_{act_id}.gpx",
-                            mime="application/gpx+xml",
-                            key=f"download_{act_id}"
-                        )
 
     st.markdown("---")
 
@@ -247,7 +275,6 @@ def activites_page():
                 distance = st.number_input("📏 Distance (km)", min_value=0.0, value=distance_default, step=0.1)
                 duree = st.text_input("⏱️ Durée (HH:MM:SS)", value=duree_default or "")
         
-        # Champ Description sur toute la largeur
         description = st.text_area(
             "📄 Description (optionnelle)", 
             value=description_default,
@@ -265,39 +292,29 @@ def activites_page():
                 st.error("⚠️ La distance doit être supérieure à 0")
             else:
                 try:
-                    # --- Upload GPX si présent et récupération du contenu ---
                     trace_content = ""
                     
                     if fichier_gpx:
-                        # Nouveau fichier GPX uploadé
-                        files = {"file": (fichier_gpx.name, fichier_gpx.getvalue())}
-                        resp_upload = requests.post(f"{API_URL}/activites/upload_gpx/", files=files)
-                        resp_upload.raise_for_status()
-                        upload_result = resp_upload.json()
-                        # Récupérer le CONTENU GPX (pas le chemin fichier)
-                        trace_content = upload_result.get("gpx_content", "")
-                        
-                        if not trace_content:
-                            st.warning("⚠️ Le fichier GPX a été uploadé mais le contenu est vide")
+                        try:
+                            trace_content = fichier_gpx.getvalue().decode('utf-8')
+                        except Exception as e:
+                            st.error(f"❌ Erreur lors de la lecture du fichier GPX : {e}")
+                            trace_content = ""
                     else:
-                        # Pas de nouveau fichier : conserver l'existant en cas de modification
                         if st.session_state.modif_data:
                             trace_content = st.session_state.modif_data.get("trace", "")
-                        # Sinon, trace_content reste vide (activité manuelle sans GPX)
 
-                    # --- Payload pour création / modification activité ---
                     payload = {
                         "titre": titre,
                         "type_sport": type_sport.lower(),
                         "distance": distance,
                         "date": str(date_activite),
-                        "trace": trace_content,  # Contenu GPX complet ou chaîne vide
+                        "trace": trace_content,
                         "description": description,
                         "duree": duree,
                         "id_user": st.session_state.user_id
                     }
 
-                    # --- Modification ---
                     if st.session_state.get("modif_id"):
                         act_id = st.session_state["modif_id"]
                         put_resp = requests.put(
@@ -312,7 +329,6 @@ def activites_page():
                         st.session_state.modif_data = {}
                         st.rerun()
                     else:
-                        # --- Création ---
                         post_resp = requests.post(
                             f"{API_URL}/activites/",
                             json=payload,
@@ -324,9 +340,14 @@ def activites_page():
                         st.rerun()
 
                 except requests.exceptions.HTTPError as http_err:
-                    st.error(f"Erreur HTTP : {http_err.response.status_code} - {http_err.response.text}")
+                    st.error(f"❌ Erreur HTTP : {http_err.response.status_code}")
+                    try:
+                        error_detail = http_err.response.json()
+                        st.error(f"Détails : {error_detail.get('detail', 'Erreur inconnue')}")
+                    except:
+                        st.error(f"Réponse : {http_err.response.text}")
                 except Exception as e:
-                    st.error(f"❌ Erreur réseau ou API: {e}")
+                    st.error(f"❌ Erreur : {e}")
 
     with col2:
         if st.button("🔄 Réinitialiser", use_container_width=True):

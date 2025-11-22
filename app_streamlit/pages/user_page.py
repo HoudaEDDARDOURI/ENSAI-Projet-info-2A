@@ -398,7 +398,7 @@ def render_auth_page():
     st.markdown("""
     <div style="max-width: 400px; margin: 50px auto; text-align: center;">
         <h1 style="font-size: 3em;">🏃</h1>
-        <h2>Sport App</h2>
+        <h2>SporTrack</h2>
         <p style="color: #8E8E8E;">Connectez-vous pour suivre vos activités sportives</p>
     </div>
     """, unsafe_allow_html=True)
@@ -411,19 +411,30 @@ def render_auth_page():
         password = st.text_input("Mot de passe", type="password", key="login_password")
         
         if st.button("Se connecter", type="primary", use_container_width=True):
-            try:
-                resp = requests.get(f"{API_URL}/users/me", auth=(username, password), timeout=10)
-                if resp.status_code == 200:
-                    st.session_state.auth = (username, password)
-                    st.session_state.user = resp.json()
-                    st.session_state.user_id = st.session_state.user.get("id_user") or st.session_state.user.get("id")
-                    st.session_state.username = username
-                    st.success("✅ Connexion réussie")
-                    st.rerun()
-                else:
-                    st.error("Identifiants incorrects")
-            except Exception as e:
-                st.error(f"Erreur de connexion : {e}")
+            if not username or not password:
+                st.error("⚠️ Veuillez remplir tous les champs")
+            else:
+                try:
+                    resp = requests.get(f"{API_URL}/users/me", auth=(username, password), timeout=10)
+                    if resp.status_code == 200:
+                        st.session_state.auth = (username, password)
+                        st.session_state.user = resp.json()
+                        st.session_state.user_id = st.session_state.user.get("id_user") or st.session_state.user.get("id")
+                        st.session_state.username = username
+                        st.success("✅ Connexion réussie")
+                        st.rerun()
+                    elif resp.status_code == 404:
+                        st.error("❌ Utilisateur non trouvé")
+                    elif resp.status_code == 401:
+                        st.error("❌ Mot de passe incorrect")
+                    else:
+                        st.error("❌ Identifiants incorrects")
+                except requests.exceptions.ConnectionError:
+                    st.error("❌ Impossible de se connecter au serveur. Vérifiez que l'API est démarrée.")
+                except requests.exceptions.Timeout:
+                    st.error("❌ Le serveur met trop de temps à répondre")
+                except Exception as e:
+                    st.error(f"❌ Erreur de connexion : {e}")
     
     with tab2:
         st.markdown("<br>", unsafe_allow_html=True)
@@ -431,15 +442,46 @@ def render_auth_page():
         nom = st.text_input("Nom", key="signup_nom")
         username = st.text_input("Nom d'utilisateur", key="signup_username")
         password = st.text_input("Mot de passe", type="password", key="signup_password")
+        confirm_password = st.text_input("Confirmer le mot de passe", type="password", key="signup_confirm_password")
         
         if st.button("Créer mon compte", type="primary", use_container_width=True):
-            try:
-                data = {"prenom": prenom, "nom": nom, "username": username, "password": password}
-                resp = requests.post(f"{API_URL}/users/", data=data, timeout=10)
-                
-                if resp.status_code == 200:
-                    st.success("🎉 Compte créé ! Vous pouvez maintenant vous connecter.")
-                else:
-                    st.error(resp.json().get("detail", "Erreur lors de la création"))
-            except Exception as e:
-                st.error(f"Erreur : {e}")
+            # Validation côté client
+            if not prenom or not nom or not username or not password:
+                st.error("⚠️ Veuillez remplir tous les champs")
+            elif len(username) < 3:
+                st.error("⚠️ Le nom d'utilisateur doit contenir au moins 3 caractères")
+            elif len(password) < 6:
+                st.error("⚠️ Le mot de passe doit contenir au moins 6 caractères")
+            elif password != confirm_password:
+                st.error("⚠️ Les mots de passe ne correspondent pas")
+            else:
+                try:
+                    data = {
+                        "prenom": prenom, 
+                        "nom": nom, 
+                        "username": username, 
+                        "password": password
+                    }
+                    resp = requests.post(f"{API_URL}/users/", data=data, timeout=10)
+                    
+                    if resp.status_code == 200:
+                        st.success("🎉 Compte créé avec succès ! Vous pouvez maintenant vous connecter.")
+                        st.balloons()
+                    elif resp.status_code == 400:
+                        error_detail = resp.json().get("detail", "")
+                        
+                        # Gestion spécifique pour username déjà utilisé
+                        if "username" in error_detail.lower() or "déjà utilisé" in error_detail.lower() or "already" in error_detail.lower():
+                            st.error(f"❌ Le nom d'utilisateur '@{username}' est déjà pris. Veuillez en choisir un autre.")
+                        else:
+                            st.error(f"❌ {error_detail}")
+                    else:
+                        error_detail = resp.json().get("detail", "Erreur inconnue")
+                        st.error(f"❌ Erreur lors de la création du compte : {error_detail}")
+                        
+                except requests.exceptions.ConnectionError:
+                    st.error("❌ Impossible de se connecter au serveur. Vérifiez que l'API est démarrée.")
+                except requests.exceptions.Timeout:
+                    st.error("❌ Le serveur met trop de temps à répondre")
+                except Exception as e:
+                    st.error(f"❌ Erreur : {e}")

@@ -6,7 +6,7 @@ from pages.feed_page import feed_page
 from pages.parcours_page import parcours_page
 
 st.set_page_config(
-    page_title="Sport App 🏃",
+    page_title="SorTrack 🏃",
     page_icon="🏃",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -63,7 +63,7 @@ div.stButton > button:hover {
 
 # ===== SIDEBAR DESIGN =====
 with st.sidebar:
-    st.markdown("# 🏃 Sport App")
+    st.markdown("# 🏃 SporTrack")
     st.markdown("---")
     
     # Affichage utilisateur connecté
@@ -93,7 +93,7 @@ with st.sidebar:
         # Section aide/info
         with st.expander("ℹ️ À propos"):
             st.write("""
-            **Sport App** vous permet de :
+            **SporTrack** vous permet de :
             - 📝 Suivre vos activités sportives
             - 📊 Analyser vos performances
             - 👥 Suivre vos amis

@@ -7,6 +7,7 @@ from utils.securite import verify_password
 security = HTTPBasic()
 user_service = UserService()
 
+
 def get_current_user(credentials: HTTPBasicCredentials = Depends(security)) -> User:
     """Vérifie les credentials et retourne l'utilisateur authentifié"""
     user = user_service.get_user_par_username(credentials.username)

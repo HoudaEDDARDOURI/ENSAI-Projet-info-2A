@@ -30,82 +30,62 @@ def parcours_page():
     with col2:
         arrivee = st.text_input("🏁 Adresse d'arrivée", placeholder="Ex: Lyon, France")
 
-    id_activite = st.text_input(
-        "🔗 ID d'activité (optionnel)", 
-        value="", 
-        placeholder="Si renseigné, utilise le GPX de l'activité",
-        help="Laissez vide pour créer un parcours basé sur les adresses"
-    )
+    if st.button("✅ Créer le parcours", type="primary", use_container_width=True):
+        # Validation
+        if not depart or not arrivee:
+            st.error("⚠️ Veuillez renseigner les adresses de départ et d'arrivée")
+        else:
+            try:
+                with st.spinner("🔄 Création du parcours en cours..."):
+                    payload = {
+                        "depart": depart,
+                        "arrivee": arrivee,
+                        "id_user": user_id
+                    }
 
-    if id_activite.strip() == "":
-        id_activite = None
-    else:
-        try:
-            id_activite = int(id_activite)
-        except ValueError:
-            st.error("⚠️ L'ID d'activité doit être un nombre")
-            id_activite = None
+                    # Création du parcours
+                    response = requests.post(f"{API_URL}/parcours/", params=payload)
+                    response.raise_for_status()
+                    result = response.json()
+                    parcours_id_created = result.get("id_parcours")
 
-    col_btn1, col_btn2 = st.columns([1, 3])
-    
-    with col_btn1:
-        if st.button("✅ Créer le parcours", type="primary", use_container_width=True):
-            # Validation
-            if not id_activite and (not depart or not arrivee):
-                st.error("⚠️ Veuillez renseigner soit un ID d'activité, soit les adresses de départ et d'arrivée")
-            else:
+                    st.success("🎉 Parcours créé avec succès !")
+
+                    # Visualisation automatique
+                    if parcours_id_created is not None:
+                        with st.spinner("🗺️ Génération de la carte..."):
+                            vis_response = requests.get(
+                                f"{API_URL}/parcours/{parcours_id_created}/visualiser",
+                                timeout=15
+                            )
+                            vis_response.raise_for_status()
+                            html_content = vis_response.json().get("html_content")
+
+                            if html_content:
+                                st.markdown("---")
+                                st.info("🗺️ Visualisation du parcours créé")
+                                # Affichage de la carte avec hauteur augmentée
+                                components.html(html_content, height=650, scrolling=False)
+                            else:
+                                st.warning("⚠️ Le parcours a été créé, mais le contenu HTML est vide.")
+                    else:
+                        st.warning("⚠️ Le parcours a été créé, mais l'API n'a pas renvoyé d'ID.")
+
+            except requests.exceptions.HTTPError as http_err:
+                st.error(f"❌ Erreur HTTP : {http_err.response.status_code}")
                 try:
-                    with st.spinner("🔄 Création du parcours en cours..."):
-                        payload = {
-                            "depart": depart,
-                            "arrivee": arrivee,
-                            "id_user": user_id,
-                            "id_activite": id_activite
-                        }
+                    error_detail = http_err.response.json()
+                    st.error(f"Détails : {error_detail.get('detail', 'Erreur inconnue')}")
+                except:
+                    st.error(f"Réponse : {http_err.response.text}")
 
-                        # Création du parcours
-                        response = requests.post(f"{API_URL}/parcours/", params=payload)
-                        response.raise_for_status()
-                        result = response.json()
-                        parcours_id_created = result.get("id_parcours")
-
-                        st.success("🎉 Parcours créé avec succès !")
-
-                        # Visualisation automatique
-                        if parcours_id_created is not None:
-                            with st.spinner("🗺️ Génération de la carte..."):
-                                vis_response = requests.get(
-                                    f"{API_URL}/parcours/{parcours_id_created}/visualiser",
-                                    timeout=15
-                                )
-                                vis_response.raise_for_status()
-                                html_content = vis_response.json().get("html_content")
-
-                                if html_content:
-                                    st.info("🗺️ Visualisation du parcours créé")
-                                    components.html(html_content, height=600, scrolling=True)
-                                else:
-                                    st.warning("⚠️ Le parcours a été créé, mais le contenu HTML est vide.")
-                        else:
-                            st.warning("⚠️ Le parcours a été créé, mais l'API n'a pas renvoyé d'ID.")
-
-                except requests.exceptions.HTTPError as http_err:
-                    st.error(f"❌ Erreur HTTP : {http_err.response.status_code}")
-                    try:
-                        error_detail = http_err.response.json()
-                        st.error(f"Détails : {error_detail.get('detail', 'Erreur inconnue')}")
-                    except:
-                        st.error(f"Réponse : {http_err.response.text}")
-
-                except Exception as e:
-                    st.error(f"❌ Erreur : {e}")
+            except Exception as e:
+                st.error(f"❌ Erreur : {e}")
 
     st.markdown("---")
 
-
-
     # ==================================================
-    # SECTION 3 — PRÉVISUALISER UN FICHIER GPX
+    # SECTION 2 — PRÉVISUALISER UN FICHIER GPX
     # ==================================================
 
     st.subheader("📂 Prévisualiser un fichier GPX")
@@ -131,7 +111,9 @@ def parcours_page():
 
                 if html_content:
                     st.success("✅ Fichier GPX chargé avec succès")
-                    components.html(html_content, height=600, scrolling=True)
+                    st.markdown("---")
+                    # Affichage de la carte GPX
+                    components.html(html_content, height=650, scrolling=False)
                 else:
                     st.warning("⚠️ Contenu HTML vide")
 
@@ -147,4 +129,3 @@ def parcours_page():
             st.error(f"❌ Erreur lors de la lecture du fichier : {e}")
 
     st.markdown("---")
- 

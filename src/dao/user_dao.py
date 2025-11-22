@@ -7,13 +7,6 @@ from business_object.user import User
 from psycopg import errors
 from typing import List
 
-load_dotenv()  # charge les variables depuis le fichier .env
-host = os.environ['POSTGRES_HOST']
-port = os.environ['POSTGRES_PORT']
-user = os.environ['POSTGRES_USER']
-password = os.environ['POSTGRES_PASSWORD']
-database = os.environ['POSTGRES_DATABASE']
-
 
 class UserDao(metaclass=Singleton):
 

@@ -34,4 +34,4 @@ class DBConnection(metaclass=Singleton):
         """Ferme proprement la connexion à la base."""
         if self.__connection and not self.__connection.closed:
             self.__connection.close()
-            print("🔒 Connexion à la base fermée.")
+            print("Connexion à la base fermée.")

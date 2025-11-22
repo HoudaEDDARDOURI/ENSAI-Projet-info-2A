@@ -2,13 +2,7 @@ from business_object.user import User
 from business_object.activite import Activite
 from dao.user_dao import UserDao
 from dao.activite_dao import ActiviteDao
-from dao.like_dao import LikeDao
-from dao.commentaire_dao import CommentaireDao
 from utils.securite import hash_password
-from dao.db_connection import DBConnection
-from business_object.course import Course
-from business_object.natation import Natation
-from business_object.cyclisme import Cyclisme
 import logging
 from typing import List
 

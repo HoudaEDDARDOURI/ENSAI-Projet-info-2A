@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, Form, HTTPException
 from typing import Optional
 from business_object.user import User
 from service.user_service import UserService
-from client.auth import get_current_user  # ← Import depuis auth.py
+from client.auth import get_current_user 
 from service.activite_service import ActiviteService
-
+import logging
 
 user_service = UserService()
 activite_service = ActiviteService()
@@ -26,10 +26,39 @@ def create_user(
     password: str = Form(...)
 ):
     """Créer un nouveau compte utilisateur"""
-    user = user_service.creer_user(prenom, nom, username, password)
-    if not user:
-        raise HTTPException(status_code=400, detail="Erreur création utilisateur")
-    return {"id": user.id_user, "username": user.username}
+    try:
+        # Vérifier d'abord si le username existe déjà
+        if user_service.pseudo_deja_utilise(username):
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Le nom d'utilisateur '{username}' est déjà utilisé"
+            )
+        
+        user = user_service.creer_user(prenom, nom, username, password)
+        
+        if not user:
+            raise HTTPException(
+                status_code=400, 
+                detail="Erreur lors de la création de l'utilisateur"
+            )
+        
+        return {"id": user.id_user, "username": user.username}
+    
+    except HTTPException:
+        # Re-lever les HTTPException pour qu'elles soient gérées par FastAPI
+        raise
+    
+    except ValueError as e:
+        # Erreurs de validation
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    except Exception as e:
+        # Erreur générique
+        logging.error(f"Erreur inattendue lors de la création d'utilisateur : {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail="Erreur interne du serveur lors de la création du compte"
+        )
 
 # ═══════════════════════════════════════════
 # ENDPOINTS PROTÉGÉS (authentification requise)
@@ -43,8 +72,8 @@ def lire_user_courant(current_user: User = Depends(get_current_user)):
     followers = user_service.lister_followers(current_user)
     followers_count = len(followers)
     
-    # Nombre de suivis (followed) — si tu as une fonction similaire à lister_followers
-    followed_count = len(user_service.lister_followed(current_user))  # à créer si nécessaire
+    # Nombre de suivis (followed)
+    followed_count = len(user_service.lister_followed(current_user))
 
     # Nombre d'activités pratiquées par le user actuel 
     nombre_activites = len(activite_service.get_toutes_activites(current_user.id_user))
@@ -69,17 +98,39 @@ def modifier_user_api(
     current_user: User = Depends(get_current_user)
 ):
     """Modifier les informations de l'utilisateur connecté"""
-    if prenom and prenom != "string":
-        current_user.prenom = prenom
-    if nom and nom != "string":
-        current_user.nom = nom
-    if username and username != "string":
-        current_user.username = username
+    try:
+        # Vérifier si le nouveau username est déjà pris (par quelqu'un d'autre)
+        if username and username != current_user.username:
+            if user_service.pseudo_deja_utilise(username):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Le nom d'utilisateur '{username}' est déjà utilisé"
+                )
+        
+        if prenom and prenom != "string":
+            current_user.prenom = prenom
+        if nom and nom != "string":
+            current_user.nom = nom
+        if username and username != "string":
+            current_user.username = username
 
-    success = user_service.modifier_user(current_user, mot_de_passe)
-    if not success:
-        raise HTTPException(status_code=500, detail="Erreur lors de la modification")
-    return {"message": "Utilisateur modifié avec succès"}
+        success = user_service.modifier_user(current_user, mot_de_passe)
+        
+        if not success:
+            raise HTTPException(status_code=500, detail="Erreur lors de la modification")
+        
+        return {"message": "Utilisateur modifié avec succès"}
+    
+    except HTTPException:
+        raise
+    
+    except Exception as e:
+        logging.error(f"Erreur lors de la modification de l'utilisateur : {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur interne lors de la modification"
+        )
+
 
 @user_router.delete("/{id_user}")
 def supprimer_user(id_user: int, current_user: User = Depends(get_current_user)):
@@ -115,10 +166,9 @@ def suggestions(current_user: User = Depends(get_current_user)):
     ]
 
 
-
 @user_router.post("/{id}/follow")
 def suivre_user(id: int, current_user: User = Depends(get_current_user)):
-    autre_user = user_service.lire_user(id)  # ✅ Fonction existante
+    autre_user = user_service.lire_user(id)
     if not autre_user:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable")
 
@@ -130,11 +180,10 @@ def suivre_user(id: int, current_user: User = Depends(get_current_user)):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @user_router.delete("/{id}/follow")
 def ne_plus_suivre_user(id: int, current_user: User = Depends(get_current_user)):
-    """
-    Arrêter de suivre un utilisateur (unfollow).
-    """
+    """Arrêter de suivre un utilisateur (unfollow)"""
     autre_user = user_service.lire_user(id)
     if not autre_user:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable")
@@ -151,9 +200,7 @@ def ne_plus_suivre_user(id: int, current_user: User = Depends(get_current_user))
 
 @user_router.get("/{id}/is-following")
 def verifier_si_suivi(id: int, current_user: User = Depends(get_current_user)):
-    """
-    Vérifie si l'utilisateur connecté suit un autre utilisateur.
-    """
+    """Vérifie si l'utilisateur connecté suit un autre utilisateur"""
     autre_user = user_service.lire_user(id)
     if not autre_user:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable")
